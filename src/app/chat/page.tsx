@@ -28,7 +28,7 @@ export default function ChatPage() {
       {/* Main Chat Area Container */}
       <div className="flex-1 flex flex-col h-full overflow-hidden relative">
         {/* Chat Page Header */}
-        <header className="h-16 border-b border-slate-200 bg-white/80 backdrop-blur-md px-6 flex items-center justify-between shrink-0 z-10 select-none">
+        <header className="h-16 border-b border-slate-200 bg-white/80 backdrop-blur-md pl-16 pr-6 md:px-6 flex items-center justify-between shrink-0 z-10 select-none">
           <div className="flex items-center gap-3">
             <div className="h-2 w-2 rounded-full bg-indigo-500 animate-pulse" />
             <h1 className="font-semibold text-slate-800 text-sm truncate max-w-[200px] md:max-w-[400px]">

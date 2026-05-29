@@ -35,6 +35,7 @@ export default function Sidebar() {
   const [editingId, setEditingId] = useState<string | null>(null);
   const [editingTitle, setEditingTitle] = useState("");
   const [isCollapsed, setIsCollapsed] = useState(false);
+  const [mobileOpen, setMobileOpen] = useState(false);
 
   const startRename = (id: string, currentTitle: string, e: React.MouseEvent) => {
     e.stopPropagation();
@@ -67,19 +68,41 @@ export default function Sidebar() {
   const handleNewChat = () => {
     const newId = addConversation();
     router.push("/chat");
+    setMobileOpen(false);
   };
 
   const isChatActive = pathname.startsWith("/chat");
   const isKbActive = pathname.startsWith("/kb");
 
   return (
-    <div 
-      className={`h-full bg-slate-900 text-slate-100 flex flex-col transition-all duration-300 border-r border-slate-800 ${
-        isCollapsed ? "w-16" : "w-64"
-      }`}
-    >
-      {/* Brand Header */}
-      <div className="h-16 flex items-center justify-between px-4 border-b border-slate-800 select-none shrink-0">
+    <>
+      {/* Mobile Hamburger Button */}
+      <button
+        onClick={() => setMobileOpen(true)}
+        className="md:hidden fixed left-4 top-3.5 z-30 p-2 rounded-xl bg-white border border-slate-200 text-slate-700 hover:bg-slate-50 transition-colors shadow-sm focus:outline-none focus:ring-2 focus:ring-indigo-500 flex items-center justify-center"
+        aria-label="打开侧边栏"
+      >
+        <Menu className="h-4.5 w-4.5" />
+      </button>
+
+      {/* Mobile Backdrop Overlay */}
+      {mobileOpen && (
+        <div
+          onClick={() => setMobileOpen(false)}
+          className="md:hidden fixed inset-0 bg-black/50 backdrop-blur-sm z-40 transition-opacity duration-300"
+        />
+      )}
+
+      {/* Sidebar Container */}
+      <div 
+        className={`h-full bg-slate-900 text-slate-100 flex flex-col transition-all duration-300 border-r border-slate-800 
+          fixed md:relative inset-y-0 left-0 z-50 md:z-auto md:flex shrink-0
+          ${isCollapsed ? "md:w-16" : "md:w-64"} w-64
+          ${mobileOpen ? "translate-x-0" : "-translate-x-full md:translate-x-0"}
+        `}
+      >
+        {/* Brand Header */}
+        <div className="h-16 flex items-center justify-between px-4 border-b border-slate-800 select-none shrink-0">
         {!isCollapsed && (
           <div className="flex items-center gap-2">
             <div className="h-9 w-9 rounded-xl bg-gradient-to-tr from-indigo-500 to-violet-600 flex items-center justify-center shadow-lg shadow-indigo-500/20">
@@ -104,6 +127,13 @@ export default function Sidebar() {
         >
           {isCollapsed ? <Menu className="h-4 w-4" /> : <ChevronLeft className="h-4 w-4" />}
         </button>
+        <button 
+          onClick={() => setMobileOpen(false)}
+          aria-label="关闭侧边栏"
+          className="text-slate-400 hover:text-slate-200 hover:bg-slate-800 p-1 rounded-lg transition-colors md:hidden focus:outline-none focus:ring-1 focus:ring-slate-500"
+        >
+          <X className="h-5 w-5" />
+        </button>
       </div>
 
       {/* Main Action - New Chat */}
@@ -124,6 +154,7 @@ export default function Sidebar() {
       <div className="px-3 py-2 space-y-1 shrink-0">
         <Link
           href="/chat"
+          onClick={() => setMobileOpen(false)}
           className={`flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-medium transition-all duration-200 ${
             isChatActive 
               ? "bg-indigo-600/10 text-indigo-400 border border-indigo-500/20" 
@@ -135,6 +166,7 @@ export default function Sidebar() {
         </Link>
         <Link
           href="/kb"
+          onClick={() => setMobileOpen(false)}
           className={`flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-medium transition-all duration-200 ${
             isKbActive 
               ? "bg-indigo-600/10 text-indigo-400 border border-indigo-500/20" 
@@ -167,11 +199,17 @@ export default function Sidebar() {
                     key={conv.id}
                     role="button"
                     tabIndex={0}
-                    onClick={() => !isEditing && setActiveConversationId(conv.id)}
+                    onClick={() => {
+                      if (!isEditing) {
+                        setActiveConversationId(conv.id);
+                        setMobileOpen(false);
+                      }
+                    }}
                     onKeyDown={(e) => {
                       if ((e.key === "Enter" || e.key === " ") && !isEditing) {
                         e.preventDefault();
                         setActiveConversationId(conv.id);
+                        setMobileOpen(false);
                       }
                     }}
                     aria-current={isActive ? "true" : "false"}
@@ -310,5 +348,6 @@ export default function Sidebar() {
         </div>
       )}
     </div>
+    </>
   );
 }

@@ -79,6 +79,33 @@ class TestChatAPI:
         assert resp.status_code == 422
 
 
+class TestAuth:
+    @pytest.mark.asyncio
+    async def test_health_no_auth_required(self, client: AsyncClient):
+        """Health check should work without Authorization header."""
+        resp = await client.get("/api/v1/health")
+        assert resp.status_code == 200
+
+    @pytest.mark.asyncio
+    async def test_protected_route_requires_auth(self, client: AsyncClient, monkeypatch):
+        """With a real API_KEY set, requests without auth should get 401."""
+        monkeypatch.setattr("app.api.deps.settings.API_KEY", "secret-token")
+
+        resp = await client.get("/api/v1/kb/chat/sessions")
+        assert resp.status_code == 401
+
+    @pytest.mark.asyncio
+    async def test_protected_route_valid_auth(self, client: AsyncClient, monkeypatch):
+        """With valid Bearer token, requests should succeed."""
+        monkeypatch.setattr("app.api.deps.settings.API_KEY", "secret-token")
+
+        resp = await client.get(
+            "/api/v1/kb/chat/sessions",
+            headers={"Authorization": "Bearer secret-token"},
+        )
+        assert resp.status_code == 200
+
+
 class TestRetrievalAPI:
     @pytest.mark.asyncio
     async def test_test_endpoint(self, client: AsyncClient):

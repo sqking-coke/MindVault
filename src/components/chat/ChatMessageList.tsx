@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useRef, useEffect } from "react";
+import React, { useRef, useEffect, useState } from "react";
 import { useMindVault, Message, Citation } from "@/context/MindVaultContext";
 import { 
   Sparkles, 
@@ -9,8 +9,10 @@ import {
   HelpCircle,
   Clock,
   User,
-  Bot
+  Bot,
+  Share2
 } from "lucide-react";
+import KnowledgeCard from "./KnowledgeCard";
 
 interface ChatMessageListProps {
   onSelectTemplate: (text: string) => void;
@@ -25,6 +27,11 @@ export default function ChatMessageList({ onSelectTemplate }: ChatMessageListPro
   } = useMindVault();
 
   const messagesEndRef = useRef<HTMLDivElement>(null);
+  const [sharingCard, setSharingCard] = useState<{
+    question: string;
+    answer: string;
+    citations: Citation[];
+  } | null>(null);
 
   // Find active conversation
   const activeConversation = conversations.find(c => c.id === activeConversationId);
@@ -180,7 +187,7 @@ export default function ChatMessageList({ onSelectTemplate }: ChatMessageListPro
         ) : (
           /* Message List rendering */
           <div className="space-y-6">
-            {activeConversation.messages.map((msg) => {
+            {activeConversation.messages.map((msg, idx) => {
               const isUser = msg.role === "user";
 
               return (
@@ -253,9 +260,30 @@ export default function ChatMessageList({ onSelectTemplate }: ChatMessageListPro
                     )}
 
                     {/* Timestamp underlay */}
-                    <div className={`flex items-center gap-1 text-[10px] text-slate-400 ${isUser ? "justify-end pr-1" : "pl-1.5"}`}>
-                      <Clock className="h-3 w-3" />
-                      <span>{msg.timestamp}</span>
+                    <div className={`flex items-center gap-3 text-[10px] text-slate-400 ${isUser ? "justify-end pr-1" : "pl-1.5"}`}>
+                      <div className="flex items-center gap-1">
+                        <Clock className="h-3 w-3" />
+                        <span>{msg.timestamp}</span>
+                      </div>
+                      {!isUser && msg.content.length > 20 && (
+                        <button
+                          onClick={() => {
+                            const prevMsg = activeConversation.messages[idx - 1];
+                            const questionText = prevMsg && prevMsg.role === "user" ? prevMsg.content : "关于 MindVault 的提问";
+                            setSharingCard({
+                              question: questionText,
+                              answer: msg.content,
+                              citations: msg.citations || [],
+                            });
+                          }}
+                          className="flex items-center gap-1 text-indigo-600 hover:text-indigo-800 font-medium transition-colors cursor-pointer select-none border-none bg-transparent p-0"
+                          title="生成分享知识卡片"
+                          aria-label="生成分享知识卡片"
+                        >
+                          <Share2 className="h-3 w-3 text-indigo-500" />
+                          <span>分享卡片</span>
+                        </button>
+                      )}
                     </div>
                   </div>
 
@@ -291,6 +319,15 @@ export default function ChatMessageList({ onSelectTemplate }: ChatMessageListPro
         )}
 
       </div>
+
+      {sharingCard && (
+        <KnowledgeCard
+          question={sharingCard.question}
+          answer={sharingCard.answer}
+          citations={sharingCard.citations}
+          onClose={() => setSharingCard(null)}
+        />
+      )}
     </div>
   );
 }

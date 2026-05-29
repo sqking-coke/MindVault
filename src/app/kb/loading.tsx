@@ -30,7 +30,7 @@ export default function KBLoading() {
         {activeKbId && activeKb ? (
           <div className="flex-1 flex flex-col h-full overflow-hidden">
             {/* Header with back button */}
-            <header className="h-16 border-b border-slate-200 bg-white px-6 flex items-center justify-between shrink-0 select-none">
+            <header className="h-16 border-b border-slate-200 bg-white pl-16 pr-6 md:px-6 flex items-center justify-between shrink-0 select-none">
               <div className="flex items-center gap-4 overflow-hidden">
                 <button
                   disabled

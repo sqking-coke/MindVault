@@ -9,6 +9,8 @@ class Settings(BaseSettings):
     APP_ENV: str = "development"
     APP_DEBUG: bool = True
     API_KEY: str = "change-me-in-production"
+    CORS_ORIGINS: str = "http://localhost:3000,http://localhost"
+    RATE_LIMIT_ENABLED: bool = True
 
     # --- 数据库 ---
     DATABASE_URL: str = "postgresql+asyncpg://mindvault:mindvault@localhost:5432/mindvault"

@@ -3,7 +3,7 @@ import time
 from collections.abc import AsyncGenerator
 
 from loguru import logger
-from sqlalchemy import select, func
+from sqlalchemy import select, func, desc
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.config import settings
@@ -23,12 +23,47 @@ from app.services.retrieval_service import retrieve_chunks
 from app.services.llm_service import generate_stream
 
 
+MAX_HISTORY_TURNS = 5
+
+INTENT_PATTERNS = [
+    (["什么是", "如何", "怎么", "为什么", "原理", "架构", "设计", "区别", "配置"], "knowledge_qa"),
+    (["查找", "搜索", "列出", "有哪些", "找一下"], "document_lookup"),
+    (["你好", "谢谢", "再见", "帮助", "你是谁"], "chitchat"),
+]
+
 RAG_SYSTEM_PROMPT = (
     "你是一个基于本地知识库的智能问答助手。"
     "请严格根据以下提供的参考文档内容回答用户问题。"
     "如果参考文档中没有相关信息，请明确告知用户，不要编造内容。"
     "回答时引用具体的文档名称。"
 )
+
+
+def _classify_intent(question: str) -> str:
+    for keywords, intent in INTENT_PATTERNS:
+        for kw in keywords:
+            if kw in question:
+                return intent
+    return "knowledge_qa"
+
+
+async def _build_history(db: AsyncSession, session_id: int) -> str:
+    rows = (
+        await db.execute(
+            select(KbQaRecord)
+            .where(KbQaRecord.session_id == session_id)
+            .order_by(desc(KbQaRecord.created_at))
+            .limit(MAX_HISTORY_TURNS)
+        )
+    ).scalars().all()
+
+    if not rows:
+        return ""
+
+    parts = ["\n## 对话历史\n"]
+    for r in reversed(rows):
+        parts.append(f"用户: {r.question}\n助手: {r.answer}\n")
+    return "\n".join(parts)
 
 
 def _build_context(chunks: list[RefChunk]) -> str:
@@ -62,7 +97,7 @@ async def chat_stream(
 
     yield (
         "progress",
-        json.dumps({"phase": "intent", "message": "正在理解问题...", "elapsed_ms": 0}),
+        json.dumps({"phase": "intent", "message": "正在理解问题...", "intent": _classify_intent(req.question), "elapsed_ms": 0}),
     )
 
     # — 2. Embedding —
@@ -117,7 +152,8 @@ async def chat_stream(
     )
 
     context = _build_context(chunks)
-    user_prompt = f"参考文档：\n\n{context}\n\n用户问题：{req.question}\n\n请回答："
+    history = await _build_history(db, session.id)
+    user_prompt = f"参考文档：\n\n{context}\n{history}\n用户问题：{req.question}\n\n请回答："
 
     full_answer = ""
     try:

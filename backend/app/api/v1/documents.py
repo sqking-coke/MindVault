@@ -1,7 +1,8 @@
-from fastapi import APIRouter, Depends, File, Query, UploadFile
+from fastapi import APIRouter, Depends, File, Query, Request, UploadFile
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.api.deps import get_db
+from app.core.middleware import limiter
 from app.schemas.common import success_response
 from app.schemas.document import (
     DocumentResponse,
@@ -21,7 +22,9 @@ router = APIRouter(tags=["documents"])
 
 
 @router.post("/documents")
+@limiter.limit("10/minute")
 async def upload(
+    request: Request,
     files: list[UploadFile] = File(..., description="上传文件列表"),
     db: AsyncSession = Depends(get_db),
 ):

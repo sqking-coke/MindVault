@@ -1,8 +1,9 @@
-from fastapi import APIRouter, Depends, Query
+from fastapi import APIRouter, Depends, Query, Request
 from fastapi.responses import StreamingResponse
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.api.deps import get_db
+from app.core.middleware import limiter
 from app.schemas.chat import ChatRequest
 from app.schemas.common import success_response
 from app.services.chat_service import chat_stream, get_chat_history, list_sessions
@@ -15,7 +16,8 @@ def _sse_event(event: str, data: str) -> str:
 
 
 @router.post("/chat")
-async def chat(req: ChatRequest, db: AsyncSession = Depends(get_db)):
+@limiter.limit("30/minute")
+async def chat(request: Request, req: ChatRequest, db: AsyncSession = Depends(get_db)):
     """SSE 流式 RAG 问答。事件: progress / token / done / error。"""
 
     async def event_generator():

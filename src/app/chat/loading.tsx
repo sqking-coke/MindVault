@@ -13,7 +13,7 @@ export default function ChatLoading() {
       {/* Main Chat Area Container */}
       <div className="flex-1 flex flex-col h-full overflow-hidden relative">
         {/* Chat Page Header Skeleton */}
-        <header className="h-16 border-b border-slate-200 bg-white/80 backdrop-blur-md px-6 flex items-center justify-between shrink-0 z-10 select-none">
+        <header className="h-16 border-b border-slate-200 bg-white/80 backdrop-blur-md pl-16 pr-6 md:px-6 flex items-center justify-between shrink-0 z-10 select-none">
           <div className="flex items-center gap-3">
             <div className="h-2 w-2 rounded-full bg-slate-300 animate-pulse" />
             <div className="h-4 w-32 md:w-48 bg-slate-200 rounded animate-pulse" />
