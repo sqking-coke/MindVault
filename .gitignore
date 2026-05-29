@@ -49,3 +49,11 @@ lerna-debug.log*
 *.sln
 *.sw?
 .DS_Store
+
+# Python
+__pycache__/
+.pytest_cache/
+*.pyc
+
+# Environment secrets (keep .env.example)
+.env

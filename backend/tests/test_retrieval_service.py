@@ -3,7 +3,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.models.config import KbConfig
 from app.models.chunk import KbChunk
-from app.models.document import KbDocument, DOC_STATUS_COMPLETED
+from app.models.document import KbDocument
 from app.services.retrieval_service import get_config, retrieve_chunks
 
 
@@ -40,7 +40,7 @@ class TestRetrieveChunks:
     @pytest.mark.asyncio
     async def test_no_matching_embedding_returns_empty(self, db_session: AsyncSession):
         doc = KbDocument(doc_name="test.txt", doc_type="txt", file_path="/tmp/test.txt",
-                         status=DOC_STATUS_COMPLETED, chunk_count=1)
+                         status=1, chunk_count=1)
         db_session.add(doc)
         await db_session.flush()
 

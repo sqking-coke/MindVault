@@ -2,7 +2,7 @@ import pytest
 import pytest_asyncio
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from app.models.document import KbDocument, DOC_STATUS_PROCESSING, DOC_STATUS_COMPLETED, DOC_STATUS_FAILED
+from app.models.document import KbDocument
 from app.core.exceptions import DocNotFoundError
 from app.schemas.document import DocumentUpdateRequest
 from app.services.document_service import (
@@ -16,7 +16,7 @@ from app.core.exceptions import DocFormatUnsupportedError
 
 
 async def _make_document(db: AsyncSession, name: str = "test.txt", doc_type: str = "txt",
-                         file_path: str = "/tmp/test.txt", status: int = DOC_STATUS_COMPLETED) -> KbDocument:
+                         file_path: str = "/tmp/test.txt", status: int = 1) -> KbDocument:
     doc = KbDocument(doc_name=name, doc_type=doc_type, file_path=file_path, status=status, chunk_count=0)
     db.add(doc)
     await db.flush()
@@ -61,7 +61,7 @@ class TestGetDocument:
         result = await get_document(db_session, doc.id)
         assert result.id == doc.id
         assert result.doc_name == "test.txt"
-        assert result.status == DOC_STATUS_COMPLETED
+        assert result.status == 1
 
     @pytest.mark.asyncio
     async def test_get_nonexistent_raises(self, db_session: AsyncSession):
@@ -72,7 +72,7 @@ class TestGetDocument:
     async def test_get_soft_deleted_raises(self, db_session: AsyncSession):
         from datetime import datetime, timezone
         doc = KbDocument(doc_name="deleted.txt", doc_type="txt", file_path="/tmp/deleted.txt",
-                         status=DOC_STATUS_COMPLETED, chunk_count=0, deleted_at=datetime.now(timezone.utc))
+                         status=1, chunk_count=0, deleted_at=datetime.now(timezone.utc))
         db_session.add(doc)
         await db_session.commit()
 
@@ -104,7 +104,7 @@ class TestListDocuments:
         from datetime import datetime, timezone
         active = await _make_document(db_session, name="active.txt")
         deleted = KbDocument(doc_name="deleted.txt", doc_type="txt", file_path="/tmp/deleted.txt",
-                             status=DOC_STATUS_COMPLETED, chunk_count=0, deleted_at=datetime.now(timezone.utc))
+                             status=1, chunk_count=0, deleted_at=datetime.now(timezone.utc))
         db_session.add(deleted)
         await db_session.commit()
 
