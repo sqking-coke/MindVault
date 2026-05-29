@@ -1,0 +1,47 @@
+[build-system]
+requires = ["setuptools>=68.0"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "mindvault"
+version = "0.1.0"
+description = "MindVault - 本地私有知识库问答系统后端"
+readme = "README.md"
+requires-python = ">=3.11"
+dependencies = [
+    "fastapi==0.115.6",
+    "uvicorn[standard]==0.34.0",
+    "sqlalchemy[asyncio]==2.0.36",
+    "asyncpg==0.30.0",
+    "psycopg2-binary==2.9.10",
+    "pgvector==0.3.6",
+    "alembic==1.14.1",
+    "pydantic==2.10.3",
+    "pydantic-settings==2.7.0",
+    "httpx==0.28.1",
+    "python-multipart==0.0.18",
+    "loguru==0.7.3",
+    "redis==5.2.1",
+    "python-docx==1.1.2",
+    "PyPDF2==3.0.1",
+    "markdown==3.7",
+    "langchain-text-splitters==0.3.2",
+    "slowapi==0.1.9",
+]
+
+[project.optional-dependencies]
+dev = [
+    "pytest==8.3.4",
+    "pytest-asyncio==0.24.0",
+    "httpx==0.28.1",
+]
+
+[tool.setuptools.packages.find]
+include = ["app*"]
+
+[tool.pytest.ini_options]
+asyncio_mode = "strict"
+testpaths = ["tests"]
+markers = [
+    "needs_db: tests that require a running PostgreSQL + pgvector instance",
+]

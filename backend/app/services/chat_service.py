@@ -1,0 +1,233 @@
+import json
+import time
+from collections.abc import AsyncGenerator
+
+from loguru import logger
+from sqlalchemy import select, func
+from sqlalchemy.ext.asyncio import AsyncSession
+
+from app.config import settings
+from app.core.exceptions import SessionNotFoundError
+from app.models.qa_record import KbQaRecord
+from app.models.session import KbSession
+from app.schemas.chat import (
+    ChatRequest,
+    ChatHistoryRecord,
+    ChatHistoryResponse,
+    SessionItem,
+    SessionsListResponse,
+    RefChunk,
+)
+from app.services.embedding_service import embed_text
+from app.services.retrieval_service import retrieve_chunks
+from app.services.llm_service import generate_stream
+
+
+RAG_SYSTEM_PROMPT = (
+    "你是一个基于本地知识库的智能问答助手。"
+    "请严格根据以下提供的参考文档内容回答用户问题。"
+    "如果参考文档中没有相关信息，请明确告知用户，不要编造内容。"
+    "回答时引用具体的文档名称。"
+)
+
+
+def _build_context(chunks: list[RefChunk]) -> str:
+    """将检索到的切片组装成 LLM 上下文。"""
+    parts = []
+    for i, c in enumerate(chunks, 1):
+        parts.append(f"[{i}] 来源: {c.doc_name}\n{c.content}")
+    return "\n\n".join(parts)
+
+
+async def chat_stream(
+    db: AsyncSession, req: ChatRequest
+) -> AsyncGenerator[tuple[str, str], None]:
+    """RAG 流式问答主流程，yield (event_type, json_data) 元组。"""
+    t_start = time.time()
+
+    # — 1. 会话校验/创建 —
+    session = (
+        await db.execute(
+            select(KbSession).where(KbSession.session_id == req.session_id)
+        )
+    ).scalar_one_or_none()
+
+    if session is None:
+        session = KbSession(
+            session_id=req.session_id,
+            title=req.question[:50] + ("..." if len(req.question) > 50 else ""),
+        )
+        db.add(session)
+        await db.flush()
+
+    yield (
+        "progress",
+        json.dumps({"phase": "intent", "message": "正在理解问题...", "elapsed_ms": 0}),
+    )
+
+    # — 2. Embedding —
+    yield (
+        "progress",
+        json.dumps(
+            {"phase": "retrieval", "message": "正在向量化问题...", "elapsed_ms": int((time.time() - t_start) * 1000)}
+        ),
+    )
+
+    try:
+        query_embedding = await embed_text(req.question)
+    except Exception as exc:
+        yield ("error", json.dumps({"code": 5002, "message": str(exc)}))
+        return
+
+    # — 3. 检索 —
+    yield (
+        "progress",
+        json.dumps(
+            {"phase": "retrieval", "message": "正在语义检索相关文档...", "elapsed_ms": int((time.time() - t_start) * 1000)}
+        ),
+    )
+
+    chunks = await retrieve_chunks(db, query_embedding)
+
+    if not chunks:
+        yield (
+            "error",
+            json.dumps({"code": 4001, "message": "未找到与问题相关的文档内容"}),
+        )
+        return
+
+    yield (
+        "progress",
+        json.dumps(
+            {
+                "phase": "matching",
+                "message": f"已匹配 {len(chunks)} 条相关片段",
+                "elapsed_ms": int((time.time() - t_start) * 1000),
+                "similarity": round(chunks[0].similarity, 4),
+            }
+        ),
+    )
+
+    # — 4. LLM 生成 —
+    yield (
+        "progress",
+        json.dumps(
+            {"phase": "generating", "message": "正在生成回答...", "elapsed_ms": int((time.time() - t_start) * 1000)}
+        ),
+    )
+
+    context = _build_context(chunks)
+    user_prompt = f"参考文档：\n\n{context}\n\n用户问题：{req.question}\n\n请回答："
+
+    full_answer = ""
+    try:
+        async for token in generate_stream(RAG_SYSTEM_PROMPT, user_prompt):
+            full_answer += token
+            yield ("token", json.dumps({"content": token}))
+    except Exception as exc:
+        yield ("error", json.dumps({"code": 5001, "message": str(exc)}))
+        return
+
+    # — 5. 保存 QA 记录 —
+    record = KbQaRecord(
+        session_id=session.id,
+        question=req.question,
+        answer=full_answer,
+        ref_chunks=[c.model_dump() for c in chunks],
+        model_name=settings.LLM_MODEL,
+    )
+    db.add(record)
+
+    # 更新会话标题（首次问答后）
+    if session.title.startswith(req.question[:50]):
+        session.title = req.question[:30] + ("..." if len(req.question) > 30 else "")
+
+    await db.commit()
+
+    yield (
+        "done",
+        json.dumps(
+            {
+                "ref_chunks": [
+                    {
+                        "chunk_id": c.chunk_id,
+                        "doc_name": c.doc_name,
+                        "content": c.content,
+                        "similarity": c.similarity,
+                        "page": c.page,
+                    }
+                    for c in chunks
+                ]
+            }
+        ),
+    )
+
+
+# 历史查询 / 会话列表
+
+async def get_chat_history(
+    db: AsyncSession, session_id: str, page: int = 1, page_size: int = 20
+) -> ChatHistoryResponse:
+    session = (
+        await db.execute(
+            select(KbSession).where(KbSession.session_id == session_id)
+        )
+    ).scalar_one_or_none()
+
+    if session is None:
+        raise SessionNotFoundError(f"会话不存在: {session_id}")
+
+    count_q = (
+        select(func.count())
+        .select_from(KbQaRecord)
+        .where(KbQaRecord.session_id == session.id)
+    )
+    total = (await db.execute(count_q)).scalar_one()
+
+    offset = (page - 1) * page_size
+    rows = (
+        await db.execute(
+            select(KbQaRecord)
+            .where(KbQaRecord.session_id == session.id)
+            .order_by(KbQaRecord.created_at.asc())
+            .offset(offset)
+            .limit(page_size)
+        )
+    ).scalars().all()
+
+    items = [
+        ChatHistoryRecord(
+            id=row.id,
+            question=row.question,
+            answer=row.answer,
+            ref_chunks=[RefChunk(**c) for c in (row.ref_chunks or [])],
+            model_name=row.model_name,
+            created_at=row.created_at,
+        )
+        for row in rows
+    ]
+
+    return ChatHistoryResponse(
+        items=items, total=total, page=page, page_size=page_size
+    )
+
+
+async def list_sessions(db: AsyncSession) -> SessionsListResponse:
+    rows = (
+        await db.execute(
+            select(KbSession).order_by(KbSession.updated_at.desc())
+        )
+    ).scalars().all()
+
+    return SessionsListResponse(
+        sessions=[
+            SessionItem(
+                id=row.id,
+                session_id=row.session_id,
+                title=row.title,
+                created_at=row.created_at,
+                updated_at=row.updated_at,
+            )
+            for row in rows
+        ]
+    )
