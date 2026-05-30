@@ -20,13 +20,22 @@ class Settings(BaseSettings):
     REDIS_CACHE_TTL: int = 3600
     REDIS_CACHE_ENABLED: bool = True
 
-    # --- LLM ---
-    LLM_BASE_URL: str = "http://localhost:11434/v1"
+    # --- LLM Provider: ollama | openai ---
+    # ollama = 调用本地 Ollama 原生 API (http://host:11434/api/chat)
+    # openai = 调用 OpenAI 兼容 API (https://api.openai.com/v1/chat/completions)
+    LLM_PROVIDER: str = "ollama"
+    LLM_BASE_URL: str = "http://localhost:11434"
     LLM_MODEL: str = "qwen3"
+    LLM_API_KEY: str = ""
 
-    # --- Embedding ---
+    # --- Embedding Provider: ollama | openai ---
+    # ollama = 调用本地 Ollama 原生 API
+    # openai = 调用 OpenAI 兼容 API (/embeddings)
+    EMBEDDING_PROVIDER: str = "ollama"
     EMBEDDING_MODEL: str = "BAAI/bge-large-zh-v1.5"
     EMBEDDING_DIM: int = 1024
+    EMBEDDING_BASE_URL: str = ""
+    EMBEDDING_API_KEY: str = ""
 
     # --- 上传 ---
     UPLOAD_DIR: str = str(Path(__file__).resolve().parent.parent / "uploads")

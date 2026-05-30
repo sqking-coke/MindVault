@@ -24,7 +24,16 @@ services:
     environment:
       - DATABASE_URL=postgresql+asyncpg://mindvaults:mindvaults@db:5432/mindvaults
       - REDIS_URL=redis://redis:6379
-      - LLM_BASE_URL=http://ollama:11434/v1
+      # LLM / Embedding 配置通过 .env 文件注入，支持 ollama / openai 切换
+      - LLM_PROVIDER=${LLM_PROVIDER:-ollama}
+      - LLM_BASE_URL=${LLM_BASE_URL:-http://ollama:11434}
+      - LLM_MODEL=${LLM_MODEL:-qwen3}
+      - LLM_API_KEY=${LLM_API_KEY:-}
+      - EMBEDDING_PROVIDER=${EMBEDDING_PROVIDER:-ollama}
+      - EMBEDDING_MODEL=${EMBEDDING_MODEL:-BAAI/bge-large-zh-v1.5}
+      - EMBEDDING_DIM=${EMBEDDING_DIM:-1024}
+      - EMBEDDING_BASE_URL=${EMBEDDING_BASE_URL:-}
+      - EMBEDDING_API_KEY=${EMBEDDING_API_KEY:-}
     volumes:
       - uploads_data:/app/uploads
       - ./logs:/app/logs
