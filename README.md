@@ -1,11 +1,30 @@
-# mindvaults 🗃️
+<p align="center">
+  <img src="public/logo.svg" alt="mindvaults logo" width="128" />
+</p>
 
-> **Mind (智能/知识引擎) + Vault (私有安全存储)**  
-> **本地/云端双模式 RAG (检索增强生成) 知识库问答系统**
+<h1 align="center">mindvaults</h1>
+<p align="center">mindvaults = AI 知识库（Mind）+ 私有保险库（Vault），本地/云端双模式 RAG 问答系统，你的数据永远归你所有。</p>
 
-mindvaults 是一款支持**本地私有化 + 云端 API 双模式**的 RAG 知识库问答系统。提供两套部署方案：轻量模式（4 容器，~1.5GB，LLM/Embedding 走云端 API）和全栈模式（6 容器，Ollama 本地推理，数据完全不出网）。基于 FastAPI + Next.js 14 + PostgreSQL/pgvector + Redis 构建。
+
+<p align="center">
+  <img src="https://img.shields.io/badge/Python-3.11+-3776AB?logo=python&logoColor=white" alt="Python" />
+  <img src="https://img.shields.io/badge/FastAPI-0.115-009688?logo=fastapi&logoColor=white" alt="FastAPI" />
+  <img src="https://img.shields.io/badge/Next.js-14-000000?logo=nextdotjs&logoColor=white" alt="Next.js" />
+  <img src="https://img.shields.io/badge/TypeScript-5.4-3178C6?logo=typescript&logoColor=white" alt="TypeScript" />
+  <img src="https://img.shields.io/badge/React-18-61DAFB?logo=react&logoColor=black" alt="React" />
+  <br/>
+  <img src="https://img.shields.io/badge/Tailwind-3.4-06B6D4?logo=tailwindcss&logoColor=white" alt="TailwindCSS" />
+  <img src="https://img.shields.io/badge/PostgreSQL-16-4169E1?logo=postgresql&logoColor=white" alt="PostgreSQL" />
+  <img src="https://img.shields.io/badge/pgvector-HNSW-4B8BBE?logo=postgresql&logoColor=white" alt="pgvector" />
+  <img src="https://img.shields.io/badge/Redis-7-DC382D?logo=redis&logoColor=white" alt="Redis" />
+  <img src="https://img.shields.io/badge/Ollama-LLM-000000?logo=ollama&logoColor=white" alt="Ollama" />
+  <img src="https://img.shields.io/badge/Docker-Compose-2496ED?logo=docker&logoColor=white" alt="Docker" />
+  <img src="https://img.shields.io/badge/Nginx-Proxy-009639?logo=nginx&logoColor=white" alt="Nginx" />
+</p>
 
 ---
+
+> mindvaults 是一款支持**本地私有化 + 云端 API 双模式**的 RAG 知识库问答系统。提供两套部署方案：轻量模式（4 容器，~1.5GB，LLM/Embedding 走云端 API）和全栈模式（6 容器，Ollama 本地推理，数据完全不出网）。基于 FastAPI + Next.js 14 + PostgreSQL/pgvector + Redis 构建。
 
 ## 🚀 核心特性
 
@@ -154,173 +173,29 @@ graph TD
 
 ---
 
-## 🐳 Docker Compose 部署
+## 🐳 部署指南
 
-mindvaults 提供两种部署模式，适应不同硬件条件。
+mindvaults 提供**轻量（云端 API）** 和**本地全栈（Ollama）** 双模式部署，并支持开发环境手动构建。
 
-### 前置要求
-
-- Docker Engine 24+ & Docker Compose v2
-- Git
-
-### 🪶 方案一：轻量部署（推荐演示/低配服务器）
-
-> **适用**：2核4G 服务器、演示环境、不想本地跑模型  
-> **服务**：4 容器，~1.5-2GB 内存  
-> **LLM + Embedding**：走云端 API（DeepSeek / OpenAI）
-
-```bash
-# 1. 克隆项目
-git clone git@github.com:sqking-coke/mindvaults.git
-cd mindvaults
-
-# 2. 配置环境变量
-cp .env.example .env
-# 编辑 .env，将 LLM 和 Embedding 都切到云端：
-
-# LLM_PROVIDER=openai
-# LLM_BASE_URL=https://api.deepseek.com/v1
-# LLM_MODEL=deepseek-chat
-# LLM_API_KEY=sk-your-deepseek-key
-
-# EMBEDDING_PROVIDER=openai
-# EMBEDDING_MODEL=text-embedding-3-small
-# EMBEDDING_DIM=1536
-# EMBEDDING_API_KEY=sk-your-deepseek-key
-
-# 3. 注释掉 docker-compose.yml 中的 ollama 服务
-#    （或直接使用完整版 compose，Ollama 容器不会启动）
-
-# 4. 启动服务（跳过 ollama）
-docker compose up -d nginx backend frontend db redis
-
-# 5. 验证
-curl http://localhost/api/v1/health
-open http://localhost
-```
-
-**轻量模式架构**：
-
-```
-nginx (:80) ──► frontend (:3000)
-            ──► backend (:8000) ──► PostgreSQL (:5432)
-                                 ──► Redis (:6379)
-                                 ──► DeepSeek API (云端 LLM + Embedding)
-```
+> 📖 完整部署文档请参阅 **[docs/DEPLOYMENT_GUIDE.md](docs/DEPLOYMENT_GUIDE.md)**，涵盖：
+> - Docker Compose 一键部署（轻量 / 全栈）
+> - 24 项环境变量详解 + 4 种 Provider 组合方案
+> - 云服务器初始化 + Nginx HTTPS + 安全加固清单
+> - 8 个典型故障排查场景
+> - 开发环境手动构建 + 代码质量检查
 
 ---
 
-### 🏠 方案二：本地全栈部署（纯私有化）
+## 🎨 品牌视觉与变体
 
-> **适用**：16GB+ 内存服务器，数据不出内网  
-> **服务**：6 容器，~8-16GB 内存  
-> **LLM + Embedding**：本地 Ollama 推理
+mindvaults 精心设计了三款不同风格的高精细度 **SVG 矢量品牌徽标 (Logo)**，完全适配暗黑/明亮模式以及移动端自适应。
 
-```bash
-# 1. 克隆项目
-git clone git@github.com:sqking-coke/mindvaults.git
-cd mindvaults
-
-# 2. 配置环境变量（默认已是 ollama 本地模式）
-cp .env.example .env
-
-# 3. 一键启动全部服务
-docker compose up -d
-
-# 4. 等待服务就绪后，拉取模型（仅首次）
-docker exec -it $(docker ps -qf "name=ollama") ollama pull qwen3
-docker exec -it $(docker ps -qf "name=ollama") ollama pull BAAI/bge-large-zh-v1.5
-
-# 5. 验证
-curl http://localhost/api/v1/health
-open http://localhost
-```
-
-**本地模式架构**：
-
-```
-nginx (:80) ──► frontend (:3000)
-            ──► backend (:8000) ──► PostgreSQL (:5432)
-                                 ──► Redis (:6379)
-                                 ──► Ollama (:11434) LLM qwen3 + Embedding BGE
-```
-
----
-
-### 服务启动顺序（本地全栈）
-
-```
-postgres (healthy) ──┐
-redis (healthy) ─────┼──▶ backend ──▶ nginx
-ollama (healthy) ────┘        │
-                               └──▶ frontend ──▶ nginx
-```
-
----
-
-### Provider 配置速查
-
-| 配置项 | 轻量模式 (云端) | 本地模式 (Ollama) |
-|--------|----------------|-------------------|
-| `LLM_PROVIDER` | `openai` | `ollama` |
-| `LLM_BASE_URL` | `https://api.deepseek.com/v1` | `http://ollama:11434` |
-| `LLM_MODEL` | `deepseek-chat` | `qwen3` |
-| `LLM_API_KEY` | `sk-xxx` | (留空) |
-| `EMBEDDING_PROVIDER` | `openai` | `ollama` |
-| `EMBEDDING_MODEL` | `text-embedding-3-small` | `BAAI/bge-large-zh-v1.5` |
-| `EMBEDDING_DIM` | `1536` | `1024` |
-
-> ⚠️ 切换 Embedding 维度后，需重建向量库（旧维度向量不兼容）。
-
----
-
-## 💻 开发环境启动
-
-### 前置要求
-
-- Python 3.12+ 和 Poetry（后端）
-- Node.js 18+ 和 npm（前端）
-- PostgreSQL 16 + pgvector 扩展
-- Redis 7+
-- Ollama（本地 LLM 推理）
-
-### 后端
-
-```bash
-cd backend
-
-# 安装依赖
-pip install -r requirements.txt
-
-# 启动数据库迁移
-alembic upgrade head
-
-# 启动开发服务器
-uvicorn app.main:app --reload --port 8000
-```
-
-### 前端
-
-```bash
-# 安装依赖
-npm install
-
-# 启动开发服务器
-npm run dev
-```
-
-浏览器访问 http://localhost:3000。
-
-### 代码质量
-
-```bash
-# 后端测试
-cd backend && pytest
-
-# 前端 Lint + 类型检查
-npm run lint
-npx tsc --noEmit
-```
+> 🎨 完整设计规范与多模态素材，请参阅 **[docs/BRANDING_GUIDE.md](docs/BRANDING_GUIDE.md)**，包含：
+> - **Option A (默认)**: Cyber RAG Vault (赛博大脑与密码锁)
+> - **Option B**: Minimalist Monogram (极简 MV 向量交织丝带)
+> - **Option C**: Enterprise Shield (企业级高主权高防卫盾牌)
+> - **微信公众号排版规范** (次图尺寸、首图 Banner 及微信安全调色板)
+> - **网页 Favicon 转换及 Web App Manifest 配置指引**
 
 ---
 

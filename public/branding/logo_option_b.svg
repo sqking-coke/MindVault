@@ -1,0 +1,78 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 256 256" width="256" height="256">
+  <defs>
+    <!-- Background Gradient -->
+    <linearGradient id="bgGradB" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0%" stop-color="#020617"/>
+      <stop offset="100%" stop-color="#0f172a"/>
+    </linearGradient>
+
+    <!-- Monogram Line Gradient (Indigo to Cyan) -->
+    <linearGradient id="ribbonGrad" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0%" stop-color="#4f46e5"/>
+      <stop offset="50%" stop-color="#3b82f6"/>
+      <stop offset="100%" stop-color="#22d3ee"/>
+    </linearGradient>
+
+    <!-- Glowing effect for the core node -->
+    <filter id="glowFilter" x="-40%" y="-40%" width="180%" height="180%">
+      <feGaussianBlur stdDeviation="6" result="blur" />
+      <feMerge>
+        <feMergeNode in="blur" />
+        <feMergeNode in="SourceGraphic" />
+      </feMerge>
+    </filter>
+  </defs>
+
+  <!-- Minimal Outer Card Background with Rounded Border -->
+  <rect width="256" height="256" rx="56" fill="url(#bgGradB)" />
+  <rect x="12" y="12" width="232" height="232" rx="44" fill="none" stroke="rgba(255, 255, 255, 0.03)" stroke-width="1.5" />
+
+  <!-- Subtle Vector Space Lattice / Grid (Thin line vectors representing dimensions) -->
+  <g stroke="rgba(99, 102, 241, 0.08)" stroke-width="1">
+    <!-- Diagonal Lattice lines -->
+    <line x1="40" y1="40" x2="216" y2="216" />
+    <line x1="216" y1="40" x2="40" y2="216" />
+    <line x1="128" y1="12" x2="128" y2="244" />
+    <line x1="12" y1="128" x2="244" y2="128" />
+    <!-- Outer Lattice Hexagon -->
+    <polygon points="128,32 211,80 211,176 128,224 45,176 45,80" fill="none" stroke="rgba(99, 102, 241, 0.05)" />
+  </g>
+
+  <!-- Interlocking Monogram M (Mind) & V (Vault) -->
+  <!-- Designed as a futuristic continuous thick geometric vector ribbon -->
+  <g fill="none" stroke-linecap="round" stroke-linejoin="round">
+    <!-- Ribbon Shadow/Glow Background -->
+    <path d="M 52,156 L 88,68 L 128,124 L 168,68 L 204,156 M 80,104 L 128,204 L 176,104" 
+          stroke="#4f46e5" stroke-width="16" opacity="0.15" />
+          
+    <!-- Main Gradient Ribbon -->
+    <!-- The outer path forms 'M' (Mind) and 'V' (Vault) integrated cleanly -->
+    <path d="M 52,156 L 88,68 L 128,124 L 168,68 L 204,156 M 80,104 L 128,204 L 176,104" 
+          stroke="url(#ribbonGrad)" stroke-width="10" />
+  </g>
+
+  <!-- Central High-Tech Vector Retrieval Node (Symbolizing the exact query coordinate match) -->
+  <g transform="translate(128, 124)">
+    <!-- Cyan glow outer ring -->
+    <circle cx="0" cy="0" r="14" fill="#22d3ee" filter="url(#glowFilter)" opacity="0.45" />
+    <!-- Emerald core ring -->
+    <circle cx="0" cy="0" r="7" fill="#10b981" />
+    <!-- Pure White focal point -->
+    <circle cx="0" cy="0" r="2.5" fill="#ffffff" />
+    
+    <!-- Target Scope Crosshair (extremely fine lines) -->
+    <g stroke="#ffffff" stroke-width="1" opacity="0.75">
+      <line x1="-16" y1="0" x2="-9" y2="0" />
+      <line x1="9" y1="0" x2="16" y2="0" />
+      <line x1="0" y1="-16" x2="0" y2="-9" />
+      <line x1="0" y1="9" x2="0" y2="16" />
+    </g>
+  </g>
+
+  <!-- Secondary Retrieval Node on the V-point (Deep Search Symbolism) -->
+  <g transform="translate(128, 204)">
+    <circle cx="0" cy="0" r="9" fill="#4f46e5" filter="url(#glowFilter)" opacity="0.5" />
+    <circle cx="0" cy="0" r="4" fill="#3b82f6" />
+    <circle cx="0" cy="0" r="1.5" fill="#ffffff" />
+  </g>
+</svg>

@@ -721,16 +721,16 @@ data: {"ref_chunks": [{"chunk_id": 42, "doc_name": "系统架构设计手册.md"
 services:
   frontend:
     build:
-      context: .
-      dockerfile: Dockerfile.frontend
-    ports: ["3000:3000"]
-    depends_on: [backend]
+      context: ..
+      dockerfile: ../Dockerfile.frontend
+    ports: [ "3000:3000" ]
+    depends_on: [ backend ]
 
   backend:
     build:
-      context: ./backend
-      dockerfile: Dockerfile
-    ports: ["8000:8000"]
+      context: ../backend
+      dockerfile: ../backend/Dockerfile
+    ports: [ "8000:8000" ]
     environment:
       - DATABASE_URL=postgresql+asyncpg://user:pass@db:5432/mindvaults
       - REDIS_URL=redis://redis:6379
@@ -742,7 +742,7 @@ services:
       - MAX_UPLOAD_SIZE_MB=50
     volumes:
       - uploads_data:/app/uploads
-    depends_on: [db, redis, ollama]
+    depends_on: [ db, redis, ollama ]
 
   db:
     image: pgvector/pgvector:pg16
@@ -761,7 +761,7 @@ services:
     volumes:
       - ollama_data:/root/.ollama
     # 启动后拉取模型
-    entrypoint: ["/bin/sh", "-c"]
+    entrypoint: [ "/bin/sh", "-c" ]
     command:
       - |
         ollama serve &
@@ -772,10 +772,10 @@ services:
 
   nginx:
     image: nginx:alpine
-    ports: ["80:80"]
+    ports: [ "80:80" ]
     volumes:
       - ./nginx.conf:/etc/nginx/nginx.conf:ro
-    depends_on: [frontend, backend]
+    depends_on: [ frontend, backend ]
 
 volumes:
   pgdata:

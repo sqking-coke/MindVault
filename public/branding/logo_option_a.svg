@@ -1,0 +1,170 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 256 256" width="256" height="256">
+  <defs>
+    <!-- Background Gradient for Vault Inner Plate -->
+    <linearGradient id="bgGrad" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0%" stop-color="#0f172a"/>
+      <stop offset="100%" stop-color="#020617"/>
+    </linearGradient>
+
+    <!-- Brand Security Gradient (Indigo to Violet) -->
+    <linearGradient id="shieldGrad" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0%" stop-color="#4f46e5"/>
+      <stop offset="100%" stop-color="#7c3aed"/>
+    </linearGradient>
+
+    <!-- Brain intelligence / RAG Network Gradient (Cyan to Emerald) -->
+    <linearGradient id="glowTeal" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0%" stop-color="#22d3ee"/>
+      <stop offset="100%" stop-color="#10b981"/>
+    </linearGradient>
+
+    <!-- Soft accent gradient for connections -->
+    <linearGradient id="accentGrad" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0%" stop-color="#22d3ee"/>
+      <stop offset="100%" stop-color="#4f46e5"/>
+    </linearGradient>
+
+    <!-- Glowing effect for neural net -->
+    <filter id="neonGlow" x="-30%" y="-30%" width="160%" height="160%">
+      <feGaussianBlur stdDeviation="4" result="blur" />
+      <feMerge>
+        <feMergeNode in="blur" />
+        <feMergeNode in="SourceGraphic" />
+      </feMerge>
+    </filter>
+  </defs>
+
+  <!-- Elegant Protective Outer Shield -->
+  <path d="M128,15 L215,55 L215,135 C215,195 128,235 128,235 C128,235 41,195 41,135 L41,55 Z"
+        fill="none" stroke="url(#shieldGrad)" stroke-width="2" opacity="0.25"/>
+  
+  <path d="M128,20 L210,58 L210,132 C210,188 128,226 128,226 C128,226 46,188 46,132 L46,58 Z"
+        fill="none" stroke="url(#shieldGrad)" stroke-width="1" stroke-dasharray="4 4" opacity="0.15"/>
+
+  <!-- Outer vault decorative rings -->
+  <circle cx="128" cy="128" r="116" fill="url(#shieldGrad)" opacity="0.06"/>
+  <circle cx="128" cy="128" r="108" fill="none" stroke="url(#shieldGrad)" stroke-width="2" opacity="0.25"/>
+
+  <!-- Vault door main plate -->
+  <circle cx="128" cy="128" r="98" fill="url(#bgGrad)" stroke="url(#shieldGrad)" stroke-width="3" />
+  <circle cx="128" cy="128" r="90" fill="none" stroke="rgba(255,255,255,0.06)" stroke-width="1.5"/>
+  <circle cx="128" cy="128" r="76" fill="none" stroke="rgba(99, 102, 241, 0.15)" stroke-width="1" stroke-dasharray="5 3"/>
+
+  <!-- Vault Dial Combination Tick Marks -->
+  <g stroke="rgba(99, 102, 241, 0.3)" stroke-width="1.5">
+    <line x1="128" y1="38" x2="128" y2="46"/>
+    <line x1="128" y1="210" x2="128" y2="218"/>
+    <line x1="38" y1="128" x2="46" y2="128"/>
+    <line x1="210" y1="128" x2="218" y2="128"/>
+    <line x1="64" y1="64" x2="70" y2="70"/>
+    <line x1="186" y1="186" x2="192" y2="192"/>
+    <line x1="192" y1="64" x2="186" y2="70"/>
+    <line x1="70" y1="186" x2="64" y2="192"/>
+  </g>
+
+  <!-- Glowing Neural Connections (Synapses) -->
+  <g stroke="url(#accentGrad)" stroke-width="1.5" opacity="0.55" fill="none" filter="url(#neonGlow)">
+    <!-- Left hemisphere connections -->
+    <line x1="98" y1="90" x2="82" y2="110"/>
+    <line x1="82" y1="110" x2="95" y2="130"/>
+    <line x1="95" y1="130" x2="80" y2="148"/>
+    <line x1="80" y1="148" x2="100" y2="165"/>
+    <line x1="98" y1="90" x2="95" y2="130"/>
+    <line x1="82" y1="110" x2="80" y2="148"/>
+
+    <!-- Right hemisphere connections -->
+    <line x1="158" y1="90" x2="174" y2="110"/>
+    <line x1="174" y1="110" x2="161" y2="130"/>
+    <line x1="161" y1="130" x2="176" y2="148"/>
+    <line x1="176" y1="148" x2="156" y2="165"/>
+    <line x1="158" y1="90" x2="161" y2="130"/>
+    <line x1="174" y1="110" x2="176" y2="148"/>
+
+    <!-- Cross-hemisphere connections -->
+    <line x1="95" y1="130" x2="128" y2="110"/>
+    <line x1="95" y1="130" x2="128" y2="130"/>
+    <line x1="95" y1="130" x2="128" y2="150"/>
+    <line x1="161" y1="130" x2="128" y2="110"/>
+    <line x1="161" y1="130" x2="128" y2="130"/>
+    <line x1="161" y1="130" x2="128" y2="150"/>
+
+    <!-- Top connections to center -->
+    <line x1="98" y1="90" x2="128" y2="110"/>
+    <line x1="158" y1="90" x2="128" y2="110"/>
+    <!-- Bottom connections to center -->
+    <line x1="100" y1="165" x2="128" y2="150"/>
+    <line x1="156" y1="165" x2="128" y2="150"/>
+  </g>
+
+  <!-- Inner active neural nodes with multi-layered glow and white cores -->
+  <g filter="url(#neonGlow)">
+    <!-- Base Glow Rings for Nodes -->
+    <g fill="url(#glowTeal)" opacity="0.35">
+      <!-- Left hemisphere -->
+      <circle cx="98" cy="90" r="8"/>
+      <circle cx="82" cy="110" r="7"/>
+      <circle cx="95" cy="130" r="9"/>
+      <circle cx="80" cy="148" r="7"/>
+      <circle cx="100" cy="165" r="8"/>
+      <!-- Right hemisphere -->
+      <circle cx="158" cy="90" r="8"/>
+      <circle cx="174" cy="110" r="7"/>
+      <circle cx="161" cy="130" r="9"/>
+      <circle cx="176" cy="148" r="7"/>
+      <circle cx="156" cy="165" r="8"/>
+      <!-- Center bridge -->
+      <circle cx="128" cy="110" r="7"/>
+      <circle cx="128" cy="130" r="8"/>
+      <circle cx="128" cy="150" r="7"/>
+    </g>
+
+    <!-- Node Middle Cores -->
+    <g fill="url(#glowTeal)">
+      <!-- Left hemisphere -->
+      <circle cx="98" cy="90" r="4.5"/>
+      <circle cx="82" cy="110" r="3.5"/>
+      <circle cx="95" cy="130" r="5"/>
+      <circle cx="80" cy="148" r="3.5"/>
+      <circle cx="100" cy="165" r="4.5"/>
+      <!-- Right hemisphere -->
+      <circle cx="158" cy="90" r="4.5"/>
+      <circle cx="174" cy="110" r="3.5"/>
+      <circle cx="161" cy="130" r="5"/>
+      <circle cx="176" cy="148" r="3.5"/>
+      <circle cx="156" cy="165" r="4.5"/>
+      <!-- Center bridge -->
+      <circle cx="128" cy="110" r="3.5"/>
+      <circle cx="128" cy="130" r="4.5"/>
+      <circle cx="128" cy="150" r="3.5"/>
+    </g>
+
+    <!-- High-intensity Center White Cores -->
+    <g fill="#ffffff">
+      <!-- Left hemisphere -->
+      <circle cx="98" cy="90" r="1.5"/>
+      <circle cx="82" cy="110" r="1.2"/>
+      <circle cx="95" cy="130" r="2"/>
+      <circle cx="80" cy="148" r="1.2"/>
+      <circle cx="100" cy="165" r="1.5"/>
+      <!-- Right hemisphere -->
+      <circle cx="158" cy="90" r="1.5"/>
+      <circle cx="174" cy="110" r="1.2"/>
+      <circle cx="161" cy="130" r="2"/>
+      <circle cx="176" cy="148" r="1.2"/>
+      <circle cx="156" cy="165" r="1.5"/>
+      <!-- Center bridge -->
+      <circle cx="128" cy="110" r="1.2"/>
+      <circle cx="128" cy="130" r="1.5"/>
+      <circle cx="128" cy="150" r="1.2"/>
+    </g>
+  </g>
+
+  <!-- Keyhole Accent (Security Core) at bottom center, beautifully glowing -->
+  <g transform="translate(128, 182)">
+    <circle cx="0" cy="-5" r="4.5" fill="#22d3ee" filter="url(#neonGlow)" opacity="0.85"/>
+    <path d="M-2,-3 L2,-3 L2.5,4 L-2.5,4 Z" fill="#22d3ee" filter="url(#neonGlow)" opacity="0.85"/>
+    <!-- Keyhole core highlight -->
+    <circle cx="0" cy="-5" r="1.5" fill="#ffffff" />
+    <line x1="0" y1="-3" x2="0" y2="2" stroke="#ffffff" stroke-width="1"/>
+  </g>
+</svg>
