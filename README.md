@@ -1,40 +1,59 @@
 # MindVault 🗃️
 
 > **Mind (智能/知识引擎) + Vault (私有安全存储)**  
-> **本地私有化 RAG (检索增强生成) 知识库大模型问答原型系统**
+> **纯本地私有化 RAG (检索增强生成) 知识库问答系统**
 
-MindVault 是一款专为本地私有化部署设计的 RAG 知识库问答原型系统。本项目使用现代前端技术栈构建，专注于高保真 UI/UX 体验、极致的交互细节、以及平滑的多模态视觉表达，为用户提供类 Dify/AnythingLLM 的专业私有知识库管理与 AI 智能对话体验。
-
----
-
-## 🚀 核心特性与原型展示
-
-本项目已在前端完整实现并模拟了 RAG 系统的全链路核心交互流程：
-
-### 1. 💬 对话沙盒 (Dialog Arena)
-- **多会话管理**：支持动态创建、重命名、删除多个独立的对话会话（如“系统架构讨论”、“技术调研”等）。
-- **智能打字机流式响应**：模拟真实大模型的流式文本返回效果，并配有呼吸感十足的骨架屏（Loading Skeletons）加载动画。
-- **引用溯源 (Citations)**：回答中可包含点击式的引用标签（如 `[1]`, `[2]`）。点击后，将从右侧平滑滑出 **引用抽屉 (Citation Drawer)**，直观展示参考文档片段、所属源文件、页码以及向量检索相似度。
-- **快捷问答模板**：提供一键填充的预设常用问答，方便快速测试对话流。
-
-### 2. 📚 知识库管理中心 (Knowledge Hub)
-- **全局仪表盘**：卡片式网格直观展示当前所有知识库、关联文档总数、字符总字数及创建时间等元数据。
-- **拖拽式文件上传**：高保真设计的拖拽上传区，完美模拟文件解析、切片（Chunking）到存入向量库的异步流水线，并伴有精致的动态加载进度条。
-- **文档生命周期管理**：列表化展示已上传的文档，支持针对单个文档进行“重新解析”与“物理删除”交互。
-- **分屏检索沙盒 (Retrieval Sandbox)**：采用高效的分屏/分栏设计。输入检索词后，左侧展现多路召回的向量检索片段与相似度评分（Similarity Score），右侧同步渲染大模型基于该召回片段生成的整合解答。
-
-### 3. 🖥️ 系统诊断与自适应布局 (Diagnostic Sidebar)
-- **自适应响应式侧边栏**：左侧经典的专业导航侧边栏，支持移动端自适应折叠、手势遮罩与展开。
-- **实时系统监控面板**：直观展示模拟的本地硬件算力负载（如 Apple Silicon 芯片负载）、内存占用曲线、大模型（如 `Qwen-2.5-7B`）的在线运行状态，契合私有化部署的产品定位。
+MindVault 是一款专为本地私有化部署设计的 RAG 知识库问答系统。全链路数据本地处理、零外网上传，基于 FastAPI + Next.js 14 + PostgreSQL/pgvector + Redis + Ollama 构建，提供企业级私有知识库管理与 AI 智能问答体验。
 
 ---
 
-## 🛠️ 技术栈选型
+## 🚀 核心特性
 
-- **前端框架**：[Next.js 14 (App Router)](https://nextjs.org/) — 提供极佳的页面路由体验与组件化开发能力。
-- **样式引擎**：[TailwindCSS](https://tailwindcss.com/) — 保证高保真设计稿的高效、精确还原与模块化。
-- **开发语言**：[TypeScript](https://www.typescript.org/) — 全程类型安全约束，极力避免运行时异常。
-- **图标库**：[Lucide React](https://lucide.dev/) — 精美、轻量的像素级统一图标体系。
+### 1. 💬 RAG 智能问答
+- **语义检索**：pgvector HNSW 索引 + BGE-large-zh-v1.5 向量化，精准匹配私有知识
+- **SSE 流式响应**：实时 token 推送 + 打字机效果，progress 事件透明展示意图识别→检索→匹配→生成全链路
+- **多轮对话**：session_id 关联会话记忆，支持上下文连续答疑
+- **意图识别**：自动分类用户查询意图（知识问答/文档检索/闲聊），适配不同回答策略
+- **引用溯源 (Citations)**：答案附带原文片段 + 文档来源 + 相似度评分 + PDF 页码，点击引用角标弹出 CitationDrawer 查看完整原文
+
+### 2. 📚 知识库管理
+- **多格式文档导入**：支持 TXT/MD/PDF/Word 文件上传，自动解析、切片、向量化入库
+- **批量上传**：拖拽式上传区 + 异步摄入管道（解析→切片→向量化→入库），实时进度展示
+- **文档生命周期管理**：文档列表分页查看、软删除、启用/禁用、增量重索引
+- **切片管理**：按文档查看切片列表，支持编辑切片内容（自动重向量化）和删除切片
+- **检索沙盒**：分屏检索测试，输入查询词 → 返回 Top-K 匹配片段 + 相似度评分
+
+### 3. 🛠️ 知识库运维（P2）
+- **运维管理面板** (`/kb/ops`)：文档启用/禁用切换、重索引、切片查看/编辑/删除
+- **问答复盘统计** (`/kb/stats`)：高频问题 Top-N、无答案问题列表、知识库概览卡片
+- **Redis 检索缓存**：高频查询结果缓存（TTL 1h），不可用时自动降级至直接查库
+- **增量向量更新**：文档重索引 API，删除旧切片 → 重新解析 → 向量化 → 写入，异步完成
+
+### 4. 🎨 高级溯源与内容运营（P2）
+- **PDF 双屏联动高亮**：引用来源于 PDF 时，CitationDrawer 内嵌 pdf.js 预览，自动翻页至对应页码，引用文本 CSS overlay 高亮
+- **微信公众号排版适配**：inline-CSS 转换器，一键复制精美问答卡片到公众号编辑器，适配微信生态安全色与中文字体栈
+
+### 5. 🔒 安全与运维
+- **API Key 鉴权**：`Authorization: Bearer <API_KEY>` 保护所有 API 端点
+- **限流控制**：问答接口 30次/分钟，上传接口 10次/分钟（可配置）
+- **日志轮转**：loguru 结构化日志，每天午夜轮转，保留 30 天
+- **Docker Compose 一键部署**：前端 + 后端 + PostgreSQL + Redis + Ollama + Nginx
+
+---
+
+## 🛠️ 技术栈
+
+| 层面 | 技术 | 说明 |
+|------|------|------|
+| **前端** | Next.js 14 (App Router) + TypeScript + TailwindCSS | SSR/SSG 混合渲染，lucide-react 图标 |
+| **后端** | FastAPI + Uvicorn | Python 异步框架，自动生成 OpenAPI 文档 |
+| **数据库** | PostgreSQL 16 + pgvector | 业务数据 + 向量存储统一管理，HNSW 索引 |
+| **缓存** | Redis | 高频检索结果缓存 |
+| **ORM** | SQLAlchemy 2.0 + asyncpg | 异步数据库驱动 |
+| **Embedding** | BGE-large-zh-v1.5 (1024维) | 本地部署，中文语义向量化 |
+| **LLM** | Ollama (qwen3) | 本地推理，OpenAI 兼容 API |
+| **文档解析** | PyPDF2, python-docx, markdown | 多格式文档内容提取 |
+| **部署** | Docker Compose + Nginx | 一键启动全部服务 |
 
 ---
 
@@ -81,11 +100,57 @@ graph TD
 | 服务 | 端口 | 技术栈 | 用途 |
 |------|------|--------|------|
 | **Nginx** | 80 | nginx:alpine | 反向代理，路由 `/` 到前端、`/api/*` 到后端，SSE 流式免缓冲 |
-| **Frontend** | 3000 | Next.js 14 | 用户交互界面，SSR/SSG 混合渲染 |
+| **Frontend** | 3000 | Next.js 14 | 用户交互界面 |
 | **Backend** | 8000 | FastAPI + Uvicorn | RAG 核心引擎：文档解析、切片、向量检索、LLM 对话 |
-| **PostgreSQL** | 5432 | pgvector/pgvector:pg16 | 文档元数据、切片向量、会话记录，HNSW 索引加速检索 |
-| **Redis** | 6379 | redis:7-alpine | 会话缓存、限流计数器 |
+| **PostgreSQL** | 5432 | pgvector/pgvector:pg16 | 文档元数据、切片向量、会话记录、Q&A 记录，HNSW 索引 |
+| **Redis** | 6379 | redis:7-alpine | 检索结果缓存、限流计数器 |
 | **Ollama** | 11434 | ollama/ollama | 本地 LLM 推理 + Embedding 向量化 |
+
+---
+
+## 📡 API 接口
+
+所有接口以 `/api/v1` 为前缀，需要 `Authorization: Bearer <API_KEY>` 鉴权（health 除外）。
+
+### 文档管理
+| 方法 | 路径 | 说明 |
+|------|------|------|
+| POST | `/api/v1/kb/documents` | 批量上传文档（multipart/form-data） |
+| GET | `/api/v1/kb/documents` | 分页查询文档列表 |
+| GET | `/api/v1/kb/documents/{id}` | 获取文档详情 |
+| PUT | `/api/v1/kb/documents/{id}` | 更新文档名称/描述 |
+| DELETE | `/api/v1/kb/documents/{id}` | 软删除文档 |
+| PUT | `/api/v1/kb/documents/{id}/status` | 切换文档启用/禁用 |
+| POST | `/api/v1/kb/documents/{id}/reindex` | 增量重索引 |
+
+### 智能问答
+| 方法 | 路径 | 说明 |
+|------|------|------|
+| POST | `/api/v1/kb/chat` | RAG 问答（SSE 流式响应） |
+| GET | `/api/v1/kb/chat/history` | 会话问答历史（分页） |
+| GET | `/api/v1/kb/chat/sessions` | 会话列表 |
+
+### 检索与切片
+| 方法 | 路径 | 说明 |
+|------|------|------|
+| POST | `/api/v1/kb/retrieval/test` | 检索测试沙盒 |
+| GET | `/api/v1/kb/chunks/{id}/preview` | 切片预览 |
+| POST | `/api/v1/kb/chunks/{id}/locate` | 切片定位（页码+偏移量+高亮锚点） |
+| GET | `/api/v1/kb/documents/{id}/chunks` | 文档切片列表 |
+| PUT | `/api/v1/kb/chunks/{id}` | 编辑切片（自动重向量化） |
+| DELETE | `/api/v1/kb/chunks/{id}` | 删除切片 |
+
+### 问答复盘统计
+| 方法 | 路径 | 说明 |
+|------|------|------|
+| GET | `/api/v1/kb/stats/overview` | 知识库运维概览 |
+| GET | `/api/v1/kb/stats/frequent-questions` | 高频问题 Top-N |
+| GET | `/api/v1/kb/stats/unanswered` | 无答案问题列表 |
+
+### 健康检查
+| 方法 | 路径 | 说明 |
+|------|------|------|
+| GET | `/api/v1/health` | 服务健康检查（无需鉴权） |
 
 ---
 
@@ -137,79 +202,155 @@ Backend 容器内的 `entrypoint.sh` 会依次等待 PostgreSQL、Redis、Ollama
 
 ## 💻 开发环境启动
 
-为了确保您可以顺利运行并体验 MindVault 静态原型的所有高保真交互，请按照以下步骤进行环境配置、依赖安装和启动验证。
+### 前置要求
 
-### 1. 环境准备
-确保您的本地系统已安装 `Node.js`（推荐使用 v18.17.0 及以上版本）与 `npm` 包管理工具。
-- 验证 Node.js 版本：
-  ```bash
-  node -v
-  ```
+- Python 3.12+ 和 Poetry（后端）
+- Node.js 18+ 和 npm（前端）
+- PostgreSQL 16 + pgvector 扩展
+- Redis 7+
+- Ollama（本地 LLM 推理）
 
-### 2. 安装项目依赖
-在项目根目录下执行以下命令，快速安装 Next.js、React、TailwindCSS 及其相关依赖：
+### 后端
+
 ```bash
-npm install
+cd backend
+
+# 安装依赖
+pip install -r requirements.txt
+
+# 启动数据库迁移
+alembic upgrade head
+
+# 启动开发服务器
+uvicorn app.main:app --reload --port 8000
 ```
 
-### 3. 启动本地开发服务
-安装完成后，启动本地开发热更新服务器：
+### 前端
+
 ```bash
+# 安装依赖
+npm install
+
+# 启动开发服务器
 npm run dev
 ```
-启动成功后，终端将输出：
-```text
-▲ Next.js 14.2.3
-- Local:        http://localhost:3000
-```
-打开浏览器访问 [http://localhost:3000](http://localhost:3000)，即可进入 MindVault 平台，体验完整的对话、上传、检索和诊断交互！
 
-### 4. 生产构建验证
-验证项目在生产环境下的编译与静态路由生成。Next.js 编译器将进行严格的静态分析：
+浏览器访问 http://localhost:3000。
+
+### 代码质量
+
 ```bash
-npm run build
-```
-编译成功后，将生成高度优化的、预渲染的静态文件，且不含任何警告或错误。
+# 后端测试
+cd backend && pytest
 
-### 5. 代码质量与类型检查
-在提交代码前，可以运行以下命令来确保代码质量和 TypeScript 的严谨性：
-- **静态代码检查 (Linter)**：
-  ```bash
-  npm run lint
-  ```
-- **TypeScript 类型安全性验证**：
-  ```bash
-  npx tsc --noEmit
-  ```
+# 前端 Lint + 类型检查
+npm run lint
+npx tsc --noEmit
+```
 
 ---
 
-## 📁 页面与代码目录结构
-
-为了方便您深入了解前端实现细节，以下是本项目的核心代码目录结构说明：
+## 📁 代码目录结构
 
 ```text
-src/
-├── app/
-│   ├── globals.css          # 全局样式（Tailwind 指令与自定义动画）
-│   ├── layout.tsx           # 全局布局（注入 Context、自适应侧边栏容器）
-│   ├── page.tsx             # 仪表盘总览页
-│   ├── chat/
-│   │   └── page.tsx         # 对话沙盒 (Dialog Arena) 交互核心页面
-│   └── kb/
-│       └── page.tsx         # 知识库管理中心与检索沙盒主页面
-├── components/
-│   ├── chat/
-│   │   └── CitationDrawer.tsx  # 滑出式引用溯源抽屉组件
-│   └── layout/
-│       └── Sidebar.tsx      # 系统诊断侧边栏（包含 CPU、内存、模型状态面板）
-└── context/
-    └── MindVaultContext.tsx # 共享状态管理（模拟会话、文档上传、知识库列表状态）
+MindVault/
+├── backend/
+│   ├── app/
+│   │   ├── main.py                 # FastAPI 应用入口
+│   │   ├── config.py               # 环境变量配置
+│   │   ├── api/
+│   │   │   ├── deps.py             # 依赖注入（DB/鉴权）
+│   │   │   └── v1/
+│   │   │       ├── router.py       # 路由注册
+│   │   │       ├── chat.py         # 问答 SSE 端点
+│   │   │       ├── documents.py    # 文档 CRUD 端点
+│   │   │       ├── retrieval.py    # 检索测试 + 切片预览
+│   │   │       ├── chunks.py       # 切片管理端点
+│   │   │       ├── stats.py        # 问答复盘统计端点
+│   │   │       └── health.py       # 健康检查
+│   │   ├── models/                 # SQLAlchemy 数据模型
+│   │   │   ├── document.py         # KbDocument
+│   │   │   ├── chunk.py            # KbChunk (含 pgvector)
+│   │   │   ├── session.py          # KbSession
+│   │   │   ├── qa_record.py        # KbQaRecord
+│   │   │   └── config.py           # KbConfig
+│   │   ├── schemas/                # Pydantic 请求/响应模型
+│   │   ├── services/               # 业务逻辑层
+│   │   │   ├── chat_service.py     # RAG 问答 + 意图识别
+│   │   │   ├── document_service.py # 文档管理 + 重索引
+│   │   │   ├── retrieval_service.py# pgvector 向量检索
+│   │   │   ├── ingestion_service.py# 摄入管道编排
+│   │   │   ├── parser_service.py   # 文档解析（PDF/Word/MD）
+│   │   │   ├── chunking_service.py # 文本切片（固定/语义）
+│   │   │   ├── embedding_service.py# BGE 向量生成
+│   │   │   ├── llm_service.py      # Ollama LLM 调用
+│   │   │   ├── cache_service.py    # Redis 缓存
+│   │   │   ├── stats_service.py    # 问答统计聚合
+│   │   │   └── chunk_service.py    # 切片 CRUD
+│   │   └── core/
+│   │       ├── database.py         # 异步数据库引擎
+│   │       ├── redis.py            # Redis 连接管理
+│   │       ├── middleware.py        # 限流 + 请求日志
+│   │       └── exceptions.py       # 全局异常处理器
+│   └── tests/                      # pytest 测试套件
+├── src/
+│   ├── app/
+│   │   ├── layout.tsx              # 全局布局（Sidebar + Context）
+│   │   ├── page.tsx                # 首页仪表盘
+│   │   ├── chat/page.tsx           # 对话页
+│   │   └── kb/
+│   │       ├── page.tsx            # 知识库管理主页
+│   │       ├── ops/page.tsx        # 运维管理面板
+│   │       └── stats/page.tsx      # 问答复盘统计看板
+│   ├── components/
+│   │   ├── chat/
+│   │   │   ├── ChatMessageList.tsx  # 消息流 + 打字机效果
+│   │   │   ├── ChatInputArea.tsx    # 输入框 + 快捷模板
+│   │   │   ├── CitationDrawer.tsx   # 引用溯源抽屉（PDF联动）
+│   │   │   ├── KnowledgeCard.tsx    # 知识卡片生成
+│   │   │   └── WechatExport.tsx     # 公众号排版导出
+│   │   ├── kb/
+│   │   │   ├── KBDashboard.tsx      # 知识库概览卡片网格
+│   │   │   ├── DocumentTable.tsx    # 文档列表 + 操作
+│   │   │   ├── UploadZone.tsx       # 拖拽文件上传
+│   │   │   ├── RetrievalSandbox.tsx # 检索测试分屏
+│   │   │   ├── KBOpsPanel.tsx       # 运维管理面板
+│   │   │   ├── KBStatsPanel.tsx     # 统计面板容器
+│   │   │   ├── ChunkList.tsx        # 切片列表
+│   │   │   ├── ChunkEditor.tsx      # 切片编辑器
+│   │   │   ├── FrequentQuestions.tsx# 高频问题表格
+│   │   │   ├── UnansweredList.tsx   # 无答案问题列表
+│   │   │   └── OverviewCards.tsx    # 概览统计卡片
+│   │   └── layout/
+│   │       └── Sidebar.tsx          # 自适应导航侧边栏
+│   ├── services/
+│   │   ├── apiClient.ts            # API 调用封装
+│   │   ├── ragService.ts           # RAG 服务层
+│   │   ├── intentRouter.ts         # 意图路由配置
+│   │   └── mockRagService.ts       # Mock 数据（开发用）
+│   ├── context/
+│   │   └── MindVaultContext.tsx     # 全局状态管理
+│   ├── types/
+│   │   └── api.ts                  # TypeScript API 类型定义
+│   └── utils/
+│       └── wechatFormat.ts         # 公众号 inline-CSS 转换器
+├── docker-compose.yml              # Docker Compose 编排
+├── nginx.conf                      # Nginx 反向代理配置
+├── Dockerfile.frontend             # 前端 Docker 构建
+├── CLAUDE.md                       # 项目 AI Agent 指南
+├── docs/planning/                  # 分阶段规划文档 (P0/P1/P2)
+├── task_plan.md                    # 当前阶段任务规划
+├── findings.md                     # 技术研究发现
+└── progress.md                     # 进度日志
 ```
 
 ---
 
 ## ✨ 设计亮点
 
-- **样式与业务解耦**：所有数据状态（如上传进度、多会话列表、AI 回复内容等）均由 `MindVaultContext` 统一管理，组件仅负责高保真的视觉还原与 UI 交互，为后续的后端接口真实联调打下了完美的解耦基础。
-- **无外部静态资源依赖**：所有的图标、动画均由 SVG 与纯 CSS/Tailwind 构成，不依赖外部 CDN 或未打包静态图，保证离线、私有局域网环境下 100% 完美呈现。
+- **纯本地闭环**：所有文档、向量数据、问答记录全部本地存储，零外网上传，保障数据隐私安全
+- **先文档后编码**：每个阶段（P0/P1/P2）遵循 规划→拆分→分配→文档→确认→实施 工作流，规划文档 7+ 份
+- **SSE 全链路透传**：意图识别→检索→匹配→生成 四阶段 progress 事件，透明展示 RAG 底层处理链路
+- **Redis 降级策略**：缓存不可用时自动降级至直接查询 pgvector，不影响核心问答功能
+- **零 schema migration 扩展**：P2 新增文档禁用/统计/缓存等 8 项能力，零新表、零改列
+- **多 Agent 协同开发**：Claude (后端) + Gemini (前端) 并行推进，Multica 统筹协调，3-4 天完成完整阶段交付
