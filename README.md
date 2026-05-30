@@ -154,15 +154,20 @@ graph TD
 
 ---
 
-## 🐳 Docker Compose 一键部署
+## 🐳 Docker Compose 部署
+
+mindvaults 提供两种部署模式，适应不同硬件条件。
 
 ### 前置要求
 
 - Docker Engine 24+ & Docker Compose v2
-- 至少 16GB 可用内存（Ollama 模型推理）
-- （可选）NVIDIA GPU / Apple Silicon 用于 GPU 加速
+- Git
 
-### 快速启动
+### 🪶 方案一：轻量部署（推荐演示/低配服务器）
+
+> **适用**：2核4G 服务器、演示环境、不想本地跑模型  
+> **服务**：4 容器，~1.5-2GB 内存  
+> **LLM + Embedding**：走云端 API（DeepSeek / OpenAI）
 
 ```bash
 # 1. 克隆项目
@@ -171,23 +176,78 @@ cd mindvaults
 
 # 2. 配置环境变量
 cp .env.example .env
-# 编辑 .env：修改 API_KEY 等敏感配置
+# 编辑 .env，将 LLM 和 Embedding 都切到云端：
+
+# LLM_PROVIDER=openai
+# LLM_BASE_URL=https://api.deepseek.com/v1
+# LLM_MODEL=deepseek-chat
+# LLM_API_KEY=sk-your-deepseek-key
+
+# EMBEDDING_PROVIDER=openai
+# EMBEDDING_MODEL=text-embedding-3-small
+# EMBEDDING_DIM=1536
+# EMBEDDING_API_KEY=sk-your-deepseek-key
+
+# 3. 注释掉 docker-compose.yml 中的 ollama 服务
+#    （或直接使用完整版 compose，Ollama 容器不会启动）
+
+# 4. 启动服务（跳过 ollama）
+docker compose up -d nginx backend frontend db redis
+
+# 5. 验证
+curl http://localhost/api/v1/health
+open http://localhost
+```
+
+**轻量模式架构**：
+
+```
+nginx (:80) ──► frontend (:3000)
+            ──► backend (:8000) ──► PostgreSQL (:5432)
+                                 ──► Redis (:6379)
+                                 ──► DeepSeek API (云端 LLM + Embedding)
+```
+
+---
+
+### 🏠 方案二：本地全栈部署（纯私有化）
+
+> **适用**：16GB+ 内存服务器，数据不出内网  
+> **服务**：6 容器，~8-16GB 内存  
+> **LLM + Embedding**：本地 Ollama 推理
+
+```bash
+# 1. 克隆项目
+git clone git@github.com:sqking-coke/mindvaults.git
+cd mindvaults
+
+# 2. 配置环境变量（默认已是 ollama 本地模式）
+cp .env.example .env
 
 # 3. 一键启动全部服务
 docker compose up -d
 
-# 4. 等待服务就绪后，拉取所需模型
-docker exec mindvaults-ollama-1 ollama pull qwen3
-docker exec mindvaults-ollama-1 ollama pull BAAI/bge-large-zh-v1.5
+# 4. 等待服务就绪后，拉取模型（仅首次）
+docker exec -it $(docker ps -qf "name=ollama") ollama pull qwen3
+docker exec -it $(docker ps -qf "name=ollama") ollama pull BAAI/bge-large-zh-v1.5
 
-# 5. 验证服务状态
+# 5. 验证
 curl http://localhost/api/v1/health
-
-# 6. 浏览器访问
 open http://localhost
 ```
 
-### 服务启动顺序
+**本地模式架构**：
+
+```
+nginx (:80) ──► frontend (:3000)
+            ──► backend (:8000) ──► PostgreSQL (:5432)
+                                 ──► Redis (:6379)
+                                 ──► Ollama (:11434) LLM qwen3 + Embedding BGE
+```
+
+---
+
+### 服务启动顺序（本地全栈）
 
 ```
 postgres (healthy) ──┐
@@ -196,7 +256,21 @@ ollama (healthy) ────┘        │
                                └──▶ frontend ──▶ nginx
 ```
 
-Backend 容器内的 `entrypoint.sh` 会依次等待 PostgreSQL、Redis、Ollama 就绪后再执行数据库迁移并启动服务。
+---
+
+### Provider 配置速查
+
+| 配置项 | 轻量模式 (云端) | 本地模式 (Ollama) |
+|--------|----------------|-------------------|
+| `LLM_PROVIDER` | `openai` | `ollama` |
+| `LLM_BASE_URL` | `https://api.deepseek.com/v1` | `http://ollama:11434` |
+| `LLM_MODEL` | `deepseek-chat` | `qwen3` |
+| `LLM_API_KEY` | `sk-xxx` | (留空) |
+| `EMBEDDING_PROVIDER` | `openai` | `ollama` |
+| `EMBEDDING_MODEL` | `text-embedding-3-small` | `BAAI/bge-large-zh-v1.5` |
+| `EMBEDDING_DIM` | `1536` | `1024` |
+
+> ⚠️ 切换 Embedding 维度后，需重建向量库（旧维度向量不兼容）。
 
 ---
 
