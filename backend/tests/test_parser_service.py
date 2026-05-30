@@ -14,8 +14,11 @@ class TestParseDocument:
 
         try:
             result = await parse_document(tmp_path, "txt")
-            assert "hello world" in result
-            assert "this is a test" in result
+            assert len(result) == 1
+            text, page = result[0]
+            assert "hello world" in text
+            assert "this is a test" in text
+            assert page is None
         finally:
             Path(tmp_path).unlink()
 
@@ -27,15 +30,18 @@ class TestParseDocument:
 
         try:
             result = await parse_document(tmp_path, "md")
-            assert "Title" in result
-            assert "Some content" in result
+            assert len(result) == 1
+            text, page = result[0]
+            assert "Title" in text
+            assert "Some content" in text
+            assert page is None
         finally:
             Path(tmp_path).unlink()
 
     @pytest.mark.asyncio
     async def test_file_not_found(self):
         result = await parse_document("/nonexistent/path/file.txt", "txt")
-        assert result == ""
+        assert result == []
 
     @pytest.mark.asyncio
     async def test_unsupported_type(self):
@@ -45,7 +51,7 @@ class TestParseDocument:
 
         try:
             result = await parse_document(tmp_path, "xyz")
-            assert result == ""
+            assert result == []
         finally:
             Path(tmp_path).unlink()
 
@@ -57,6 +63,6 @@ class TestParseDocument:
 
         try:
             result = await parse_document(tmp_path, "txt")
-            assert result == ""
+            assert result == []
         finally:
             Path(tmp_path).unlink()

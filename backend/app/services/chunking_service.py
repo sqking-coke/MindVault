@@ -34,6 +34,23 @@ def _fixed_chunk(text: str, chunk_size: int, chunk_overlap: int) -> list[str]:
     return chunks
 
 
+async def chunk_pages(
+    pages: list[tuple[str, int | None]],
+    chunk_size: int = 500,
+    chunk_overlap: int = 50,
+    mode: str = "fixed",
+) -> list[tuple[str, int | None]]:
+    """逐页切片，保留页码信息。返回 [(chunk_text, page_number), ...]。
+    页码为 None 表示该切片来自非分页文档。
+    """
+    all_chunks: list[tuple[str, int | None]] = []
+    for page_text, page_num in pages:
+        chunks = await chunk_text(page_text, chunk_size, chunk_overlap, mode)
+        for chunk in chunks:
+            all_chunks.append((chunk, page_num))
+    return all_chunks
+
+
 async def _semantic_chunk(
     text: str, chunk_size: int, chunk_overlap: int
 ) -> list[str]:

@@ -10,6 +10,7 @@ from slowapi import _rate_limit_exceeded_handler
 from app.config import settings
 from app.api.v1.router import api_router, public_router
 from app.core.database import engine
+from app.core.redis import close_redis
 from app.core.exceptions import (
     AppException,
     app_exception_handler,
@@ -20,15 +21,16 @@ from app.core.middleware import limiter, request_log_middleware
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
-    logger.info(f"MindVault starting (env={settings.APP_ENV})")
+    logger.info(f"mindvaults starting (env={settings.APP_ENV})")
     yield
+    await close_redis()
     await engine.dispose()
-    logger.info("MindVault shut down")
+    logger.info("mindvaults shut down")
 
 
 def create_app() -> FastAPI:
     app = FastAPI(
-        title="MindVault API",
+        title="mindvaults API",
         description="本地私有知识库问答系统",
         version="0.1.0",
         lifespan=lifespan,
@@ -74,7 +76,7 @@ def _setup_logging() -> None:
     log_dir = Path(settings.LOG_DIR)
     log_dir.mkdir(parents=True, exist_ok=True)
     logger.add(
-        log_dir / "mindvault_{time:YYYY-MM-DD}.log",
+        log_dir / "mindvaults_{time:YYYY-MM-DD}.log",
         level=settings.LOG_LEVEL,
         rotation="00:00",
         retention=f"{settings.LOG_RETENTION} days",

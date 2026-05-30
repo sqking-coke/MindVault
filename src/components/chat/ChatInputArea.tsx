@@ -1,7 +1,7 @@
 "use client";
 
 import React, { useRef, useEffect } from "react";
-import { useMindVault } from "@/context/MindVaultContext";
+import { usemindvaults } from "@/context/mindvaultsContext";
 import { 
   Send, 
   Terminal, 
@@ -18,7 +18,7 @@ export default function ChatInputArea({ input, setInput }: ChatInputAreaProps) {
     activeConversationId, 
     sendMessage, 
     isGenerating 
-  } = useMindVault();
+  } = usemindvaults();
 
   const inputRef = useRef<HTMLTextAreaElement>(null);
 

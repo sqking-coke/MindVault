@@ -3,7 +3,7 @@
 import React, { useState } from "react";
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
-import { useMindVault } from "@/context/MindVaultContext";
+import { usemindvaults } from "@/context/mindvaultsContext";
 import { 
   MessageSquare, 
   Database, 
@@ -16,7 +16,9 @@ import {
   HardDrive, 
   Layers,
   ChevronLeft,
-  Menu
+  Menu,
+  Wrench,
+  BarChart3
 } from "lucide-react";
 
 export default function Sidebar() {
@@ -30,7 +32,7 @@ export default function Sidebar() {
     deleteConversation, 
     renameConversation,
     isGenerating
-  } = useMindVault();
+  } = usemindvaults();
 
   const [editingId, setEditingId] = useState<string | null>(null);
   const [editingTitle, setEditingTitle] = useState("");
@@ -72,7 +74,9 @@ export default function Sidebar() {
   };
 
   const isChatActive = pathname.startsWith("/chat");
-  const isKbActive = pathname.startsWith("/kb");
+  const isOpsActive = pathname.startsWith("/kb/ops");
+  const isStatsActive = pathname.startsWith("/kb/stats");
+  const isKbActive = pathname === "/kb" || (pathname.startsWith("/kb") && !isOpsActive && !isStatsActive);
 
   return (
     <>
@@ -109,7 +113,7 @@ export default function Sidebar() {
               <Layers className="h-5 w-5 text-white" />
             </div>
             <div>
-              <span className="font-bold text-base bg-gradient-to-r from-white via-slate-100 to-slate-300 bg-clip-text text-transparent">MindVault</span>
+              <span className="font-bold text-base bg-gradient-to-r from-white via-slate-100 to-slate-300 bg-clip-text text-transparent">mindvaults</span>
               <span className="block text-[10px] text-indigo-400 font-medium tracking-wider">v1.0.0 PROTOTYPE</span>
             </div>
           </div>
@@ -175,6 +179,30 @@ export default function Sidebar() {
         >
           <Database className="h-5 w-5 shrink-0" />
           {!isCollapsed && <span>知识中心 (KB)</span>}
+        </Link>
+        <Link
+          href="/kb/ops"
+          onClick={() => setMobileOpen(false)}
+          className={`flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-medium transition-all duration-200 ${
+            isOpsActive 
+              ? "bg-indigo-600/10 text-indigo-400 border border-indigo-500/20" 
+              : "text-slate-400 hover:text-slate-200 hover:bg-slate-800/50"
+          }`}
+        >
+          <Wrench className="h-5 w-5 shrink-0" />
+          {!isCollapsed && <span>运维管理 (Ops)</span>}
+        </Link>
+        <Link
+          href="/kb/stats"
+          onClick={() => setMobileOpen(false)}
+          className={`flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-medium transition-all duration-200 ${
+            isStatsActive 
+              ? "bg-indigo-600/10 text-indigo-400 border border-indigo-500/20" 
+              : "text-slate-400 hover:text-slate-200 hover:bg-slate-800/50"
+          }`}
+        >
+          <BarChart3 className="h-5 w-5 shrink-0" />
+          {!isCollapsed && <span>问答统计 (Stats)</span>}
         </Link>
       </div>
 
@@ -289,15 +317,25 @@ export default function Sidebar() {
         </div>
       )}
 
-      {/* Conversation List Placeholder if KB is active */}
-      {isKbActive && !isCollapsed && (
+      {/* Conversation List Placeholder if KB/Ops/Stats is active */}
+      {(isKbActive || isOpsActive || isStatsActive) && !isCollapsed && (
         <div className="flex-1 flex flex-col justify-center items-center px-4 py-8 border-t border-slate-800/60 text-center select-none text-slate-600">
-          <Database className="h-10 w-10 text-slate-700 mb-3 animate-pulse-subtle" />
+          {isOpsActive ? (
+            <Wrench className="h-10 w-10 text-slate-700 mb-3 animate-pulse-subtle" />
+          ) : isStatsActive ? (
+            <BarChart3 className="h-10 w-10 text-slate-700 mb-3 animate-pulse-subtle" />
+          ) : (
+            <Database className="h-10 w-10 text-slate-700 mb-3 animate-pulse-subtle" />
+          )}
           <p className="text-xs font-semibold uppercase tracking-wider text-slate-500 mb-1">
-            知识管理中
+            {isOpsActive ? "运维管理中" : isStatsActive ? "问答统计中" : "知识管理中"}
           </p>
           <p className="text-[11px] leading-relaxed max-w-[180px]">
-            在右侧视图中切换或建立新的本地知识库文件。
+            {isOpsActive 
+              ? "对知识库分流切片及文档检索状态进行高级维护。" 
+              : isStatsActive 
+                ? "多维度分析用户提问倾向，持续优化检索。" 
+                : "在右侧视图中切换或建立新的本地知识库文件。"}
           </p>
         </div>
       )}

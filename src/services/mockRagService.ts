@@ -5,8 +5,8 @@ export function getInitialKnowledgeBases(): KnowledgeBase[] {
   return [
     {
       id: "kb-1",
-      name: "MindVault 系统设计文档",
-      description: "包含 MindVault 系统的核心架构、数据流、向量数据库选型及 RAG 管道规范。",
+      name: "mindvaults 系统设计文档",
+      description: "包含 mindvaults 系统的核心架构、数据流、向量数据库选型及 RAG 管道规范。",
       docCount: 2,
       charCount: 58000,
       createdAt: "2026-05-20 10:24"
@@ -51,7 +51,7 @@ export function getInitialDocuments(): DocumentRecord[] {
     {
       id: "doc-1",
       kbId: "kb-1",
-      name: "mindvault-arch-v2.pdf",
+      name: "mindvaults-arch-v2.pdf",
       size: "2.4 MB",
       chars: 45200,
       status: "success",
@@ -131,13 +131,13 @@ export function getInitialConversations(): Conversation[] {
         {
           id: "msg-1-1",
           role: "user",
-          content: "你好，请问 MindVault 的底层架构是怎么设计的？它是怎么保障私有数据的安全问答的？",
+          content: "你好，请问 mindvaults 的底层架构是怎么设计的？它是怎么保障私有数据的安全问答的？",
           timestamp: "14:00"
         },
         {
           id: "msg-1-2",
           role: "assistant",
-          content: "您好！**MindVault** 是一款完全专注于本地私有化部署的 RAG (检索增强生成) 知识库系统。其架构设计完全围绕**数据不泄露、高精度检索与流畅人机交互**展开。\n\n具体而言，其核心架构包含以下三个维度：\n\n1. **全本地化 RAG 管道 [1]**：MindVault 在您的局域网/单机环境中运行，文档提取、文本切片、向量嵌入（Embedding）全部在本地 CPU/GPU 上计算完成，不依赖任何第三方云端 API。\n2. **多级检索与重排 [2]**：用户提问时，系统首先利用 HNSW 索引做向量相似度粗排，然后通过本地 Reranker 精排重构，过滤掉不相关的背景噪声，从而向大语言模型（LLM）提供高度相关的局部上下文。\n3. **溯源可视化与安全问答**：在回答您的提问时，系统会将检索到的切片来源清晰标注在回答文本中（如点击下方引用的文档卡片）。\n\n您可以通过在右侧知识库上传最新的架构文档来更新它的认知库！",
+          content: "您好！**mindvaults** 是一款完全专注于本地私有化部署的 RAG (检索增强生成) 知识库系统。其架构设计完全围绕**数据不泄露、高精度检索与流畅人机交互**展开。\n\n具体而言，其核心架构包含以下三个维度：\n\n1. **全本地化 RAG 管道 [1]**：mindvaults 在您的局域网/单机环境中运行，文档提取、文本切片、向量嵌入（Embedding）全部在本地 CPU/GPU 上计算完成，不依赖任何第三方云端 API。\n2. **多级检索与重排 [2]**：用户提问时，系统首先利用 HNSW 索引做向量相似度粗排，然后通过本地 Reranker 精排重构，过滤掉不相关的背景噪声，从而向大语言模型（LLM）提供高度相关的局部上下文。\n3. **溯源可视化与安全问答**：在回答您的提问时，系统会将检索到的切片来源清晰标注在回答文本中（如点击下方引用的文档卡片）。\n\n您可以通过在右侧知识库上传最新的架构文档来更新它的认知库！",
           timestamp: "14:01",
           citations: [mockCitations[0], mockCitations[1]]
         }
@@ -181,7 +181,7 @@ export function getMockRagResponse(content: string, kbCount: number): MockRagRes
   }
   
   return {
-    responseText: `收到您的消息："${content}"。\n\n作为一个本地私有化的 RAG 智能助理，我已成功关联了您当前的知识库。由于这是静态交互原型，我将为您模拟私有化知识库检索问答：\n\n- **检索状态**：已成功遍历关联的 **${kbCount} 个知识库**，检索相关文档。\n- **检索溯源 [1]**：已命中 MindVault 核心设计规范。本地推理引擎响应耗时 240ms。\n- **答案合成**：已剔除幻觉，在不触碰公网的情况下完成安全应答。\n\n您可以试着提问 “研发团队规范” 或 “原子习惯读书笔记” 来体验更丰富的溯源卡片！`,
+    responseText: `收到您的消息："${content}"。\n\n作为一个本地私有化的 RAG 智能助理，我已成功关联了您当前的知识库。由于这是静态交互原型，我将为您模拟私有化知识库检索问答：\n\n- **检索状态**：已成功遍历关联的 **${kbCount} 个知识库**，检索相关文档。\n- **检索溯源 [1]**：已命中 mindvaults 核心设计规范。本地推理引擎响应耗时 240ms。\n- **答案合成**：已剔除幻觉，在不触碰公网的情况下完成安全应答。\n\n您可以试着提问 “研发团队规范” 或 “原子习惯读书笔记” 来体验更丰富的溯源卡片！`,
     responseCitations: [mockCitations[0]]
   };
 }
@@ -217,10 +217,10 @@ export function getMockRetrievalResponse(query: string, activeKbName: string): M
     answer: `已在本地知识库 "${activeKbName}" 中搜索关键词 “${query}”。由于当前无更多语义切片匹配，系统为您反馈以下相似相关性最高的基础架构信息：\n\n- **推荐做法**：建议您试着在左侧输入框提问 **“弹性工作时间规定的考勤核心时间”** 或 **“系统向量存储底座”** 进行匹配。\n- **检索结论**：本地向量召回最高相似度小于阈值 0.5。以下匹配为底层 RAG 备选上下文。`,
     chunks: [
       {
-        docName: "mindvault-arch-v2.pdf",
+        docName: "mindvaults-arch-v2.pdf",
         score: 0.42,
         page: 1,
-        text: "本地单机服务器或多物理主机部署环境下，MindVault 完全支持局域网离线独立运行，通过本地网络分发。本地 Embedding 及大模型推理不向任何云端上传数据，确保隐私无虞。"
+        text: "本地单机服务器或多物理主机部署环境下，mindvaults 完全支持局域网离线独立运行，通过本地网络分发。本地 Embedding 及大模型推理不向任何云端上传数据，确保隐私无虞。"
       }
     ]
   };

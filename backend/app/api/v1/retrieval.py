@@ -2,7 +2,7 @@ import time
 
 from fastapi import APIRouter, Depends
 from loguru import logger
-from sqlalchemy import select, func
+from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.api.deps import get_db
@@ -11,7 +11,6 @@ from app.models.chunk import KbChunk
 from app.models.document import KbDocument
 from app.schemas.common import success_response
 from app.schemas.retrieval import (
-    ChunkLocateResponse,
     ChunkPreviewResponse,
     RetrievalTestRequest,
 )
@@ -51,24 +50,3 @@ async def chunk_preview(chunk_id: int, db: AsyncSession = Depends(get_db)):
     ).model_dump())
 
 
-@router.post("/chunks/{chunk_id}/locate")
-async def chunk_locate(chunk_id: int, db: AsyncSession = Depends(get_db)):
-    chunk = (await db.execute(
-        select(KbChunk).where(KbChunk.id == chunk_id)
-    )).scalar_one_or_none()
-
-    if chunk is None:
-        raise DocNotFoundError(f"切片不存在: id={chunk_id}")
-
-    offset_stmt = select(func.coalesce(func.sum(func.length(KbChunk.content)), 0)).where(
-        KbChunk.document_id == chunk.document_id,
-        KbChunk.chunk_index < chunk.chunk_index,
-    )
-    offset = (await db.execute(offset_stmt)).scalar() or 0
-
-    return success_response(ChunkLocateResponse(
-        chunk_id=chunk.id,
-        page=chunk.page or 0,
-        offset=offset,
-        highlight_anchor=chunk.content[:120],
-    ).model_dump())

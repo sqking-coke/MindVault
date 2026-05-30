@@ -5,7 +5,7 @@ import Sidebar from "@/components/layout/Sidebar";
 import CitationDrawer from "@/components/chat/CitationDrawer";
 import ChatMessageList from "@/components/chat/ChatMessageList";
 import ChatInputArea from "@/components/chat/ChatInputArea";
-import { useMindVault } from "@/context/MindVaultContext";
+import { usemindvaults } from "@/context/mindvaultsContext";
 import { ShieldCheck } from "lucide-react";
 
 export default function ChatPage() {
@@ -13,7 +13,7 @@ export default function ChatPage() {
     conversations, 
     activeConversationId, 
     knowledgeBases
-  } = useMindVault();
+  } = usemindvaults();
 
   const [input, setInput] = useState("");
 

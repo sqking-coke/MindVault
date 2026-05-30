@@ -1,9 +1,9 @@
-# MindVault 🗃️
+# mindvaults 🗃️
 
 > **Mind (智能/知识引擎) + Vault (私有安全存储)**  
 > **纯本地私有化 RAG (检索增强生成) 知识库问答系统**
 
-MindVault 是一款专为本地私有化部署设计的 RAG 知识库问答系统。全链路数据本地处理、零外网上传，基于 FastAPI + Next.js 14 + PostgreSQL/pgvector + Redis + Ollama 构建，提供企业级私有知识库管理与 AI 智能问答体验。
+mindvaults 是一款专为本地私有化部署设计的 RAG 知识库问答系统。全链路数据本地处理、零外网上传，基于 FastAPI + Next.js 14 + PostgreSQL/pgvector + Redis + Ollama 构建，提供企业级私有知识库管理与 AI 智能问答体验。
 
 ---
 
@@ -166,8 +166,8 @@ graph TD
 
 ```bash
 # 1. 克隆项目
-git clone git@github.com:sqking-coke/MindVault.git
-cd MindVault
+git clone git@github.com:sqking-coke/mindvaults.git
+cd mindvaults
 
 # 2. 配置环境变量
 cp .env.example .env
@@ -177,8 +177,8 @@ cp .env.example .env
 docker compose up -d
 
 # 4. 等待服务就绪后，拉取所需模型
-docker exec mindvault-ollama-1 ollama pull qwen3
-docker exec mindvault-ollama-1 ollama pull BAAI/bge-large-zh-v1.5
+docker exec mindvaults-ollama-1 ollama pull qwen3
+docker exec mindvaults-ollama-1 ollama pull BAAI/bge-large-zh-v1.5
 
 # 5. 验证服务状态
 curl http://localhost/api/v1/health
@@ -253,7 +253,7 @@ npx tsc --noEmit
 ## 📁 代码目录结构
 
 ```text
-MindVault/
+mindvaults/
 ├── backend/
 │   ├── app/
 │   │   ├── main.py                 # FastAPI 应用入口
@@ -329,7 +329,7 @@ MindVault/
 │   │   ├── intentRouter.ts         # 意图路由配置
 │   │   └── mockRagService.ts       # Mock 数据（开发用）
 │   ├── context/
-│   │   └── MindVaultContext.tsx     # 全局状态管理
+│   │   └── mindvaultsContext.tsx     # 全局状态管理
 │   ├── types/
 │   │   └── api.ts                  # TypeScript API 类型定义
 │   └── utils/

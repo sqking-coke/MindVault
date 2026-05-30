@@ -1,36 +1,80 @@
 "use client";
 
-import React from "react";
-import { useMindVault } from "@/context/MindVaultContext";
+import React, { useState } from "react";
+import { usemindvaults } from "@/context/mindvaultsContext";
 import { 
   FileText, 
   Clock, 
   RefreshCw, 
   Trash2, 
   AlertCircle, 
-  CheckCircle 
+  CheckCircle,
+  Eye,
+  EyeOff,
+  Sliders,
+  Database
 } from "lucide-react";
+import ChunkList from "./ChunkList";
 
-export default function DocumentTable() {
+interface DocumentTableProps {
+  opsMode?: boolean;
+}
+
+export default function DocumentTable({ opsMode = false }: DocumentTableProps) {
   const { 
     documents, 
     activeKbId, 
-    reparseDocument, 
+    reindexDocument, 
+    toggleDocumentStatus,
     deleteDocument 
-  } = useMindVault();
+  } = usemindvaults();
 
   // Filter docs for active KB
   const activeKbDocs = documents.filter(doc => doc.kbId === activeKbId);
 
+  // State to track expanded document for viewing/managing chunks
+  const [expandedDocId, setExpandedDocId] = useState<string | null>(null);
+
+  const handleToggleStatus = async (docId: string, currentStatus: string) => {
+    const nextStatus = currentStatus === "disabled" ? "enabled" : "disabled";
+    try {
+      await toggleDocumentStatus(docId, nextStatus);
+    } catch (err) {
+      alert(err instanceof Error ? err.message : "更新文档状态失败");
+    }
+  };
+
+  const handleReindex = async (docId: string, docName: string) => {
+    if (confirm(`确定要重新索引《${docName}》吗？这会清除该文档的所有旧切片与向量缓存，并重新分词切片摄入。`)) {
+      try {
+        await reindexDocument(docId);
+      } catch (err) {
+        alert(err instanceof Error ? err.message : "重索引提交失败");
+      }
+    }
+  };
+
+  const handleToggleExpand = (docId: string) => {
+    if (expandedDocId === docId) {
+      setExpandedDocId(null);
+    } else {
+      setExpandedDocId(docId);
+    }
+  };
+
   return (
-    <div className="bg-white border border-slate-200 rounded-2xl overflow-hidden shadow-sm">
+    <div className="bg-white border border-slate-200 rounded-2xl overflow-hidden shadow-sm font-sans">
       <div className="px-6 py-4 border-b border-slate-150 flex items-center justify-between select-none">
         <h3 className="font-semibold text-slate-800 text-sm flex items-center gap-1.5">
-          <FileText className="h-4.5 w-4.5 text-indigo-500" />
-          当前文档库 ({activeKbDocs.length} 个文件)
+          {opsMode ? (
+            <Sliders className="h-4.5 w-4.5 text-indigo-500" />
+          ) : (
+            <FileText className="h-4.5 w-4.5 text-indigo-500" />
+          )}
+          {opsMode ? "知识库运维文档管理" : "当前文档库"} ({activeKbDocs.length} 个文件)
         </h3>
         <div className="text-[10px] bg-indigo-50 text-indigo-600 px-2 py-0.5 rounded border border-indigo-100 font-bold uppercase">
-          向量引擎在线
+          {opsMode ? "运维控制中心就绪" : "向量引擎在线"}
         </div>
       </div>
 
@@ -44,87 +88,170 @@ export default function DocumentTable() {
             </p>
           </div>
         ) : (
-          <table className="w-full text-left border-collapse font-sans text-xs">
+          <table className="w-full text-left border-collapse text-xs">
             <thead>
               <tr className="bg-slate-50 border-b border-slate-150 text-slate-500 font-semibold select-none">
                 <th className="px-6 py-3.5">文档名称</th>
-                <th className="px-6 py-3.5">文件大小</th>
-                <th className="px-6 py-3.5">解析字符数</th>
+                <th className="px-6 py-3.5">物理大小</th>
+                <th className="px-6 py-3.5">{opsMode ? "切片数量" : "解析字符数"}</th>
                 <th className="px-6 py-3.5">当前状态</th>
                 <th className="px-6 py-3.5">上传时间</th>
                 <th className="px-6 py-3.5 text-right">管理操作</th>
               </tr>
             </thead>
             <tbody className="divide-y divide-slate-100">
-              {activeKbDocs.map((doc) => (
-                <tr key={doc.id} className="hover:bg-slate-50/50 transition-colors">
-                  <td className="px-6 py-4 font-medium text-slate-800 max-w-[200px] truncate">
-                    <div className="flex items-center gap-2">
-                      <FileText className="h-4 w-4 text-indigo-500 shrink-0" />
-                      <span className="truncate">{doc.name}</span>
-                    </div>
-                  </td>
-                  <td className="px-6 py-4 text-slate-500 font-mono select-all">{doc.size}</td>
-                  <td className="px-6 py-4 text-slate-600 font-mono font-medium">
-                    {doc.status === "success" ? `${doc.chars.toLocaleString()} 字符` : "—"}
-                  </td>
-                  <td className="px-6 py-4">
-                    {doc.status === "uploading" && (
-                      <div className="flex flex-col w-28 space-y-1 select-none">
-                        <span className="text-[10px] text-slate-500 font-bold flex items-center gap-1">
-                          <Clock className="h-3 w-3 text-slate-400 animate-spin" />
-                          正在物理上传 {doc.progress}%
-                        </span>
-                        <div className="w-full bg-slate-200 h-1 rounded-full overflow-hidden">
-                          <div className="bg-indigo-600 h-full transition-all duration-150" style={{ width: `${doc.progress}%` }} />
+              {activeKbDocs.map((doc) => {
+                const isExpanded = expandedDocId === doc.id;
+                return (
+                  <React.Fragment key={doc.id}>
+                    <tr className={`hover:bg-slate-50/50 transition-colors ${isExpanded ? "bg-slate-50/30 font-medium" : ""}`}>
+                      <td className="px-6 py-4 font-medium text-slate-800 max-w-[200px] truncate">
+                        <div className="flex items-center gap-2">
+                          <FileText className="h-4 w-4 text-indigo-500 shrink-0" />
+                          <span className="truncate" title={doc.name}>{doc.name}</span>
                         </div>
-                      </div>
+                      </td>
+                      <td className="px-6 py-4 text-slate-500 font-mono select-all">{doc.size}</td>
+                      <td className="px-6 py-4 text-slate-600 font-mono font-medium">
+                        {doc.status === "success" || doc.status === "disabled" 
+                          ? (opsMode ? `${doc.chars} 个切片` : `${(doc.chars * 4).toLocaleString()} 字符`) 
+                          : "—"}
+                      </td>
+                      <td className="px-6 py-4">
+                        {doc.status === "uploading" && (
+                          <div className="flex flex-col w-28 space-y-1 select-none">
+                            <span className="text-[10px] text-slate-500 font-bold flex items-center gap-1">
+                              <Clock className="h-3 w-3 text-slate-400 animate-spin" />
+                              正在物理上传 {doc.progress}%
+                            </span>
+                            <div className="w-full bg-slate-200 h-1 rounded-full overflow-hidden">
+                              <div className="bg-indigo-600 h-full transition-all duration-150" style={{ width: `${doc.progress}%` }} />
+                            </div>
+                          </div>
+                        )}
+                        {doc.status === "parsing" && (
+                          <div className="inline-flex items-center gap-1.5 text-[11px] font-semibold text-indigo-600 bg-indigo-50/50 px-2.5 py-0.5 rounded-full border border-indigo-100 select-none">
+                            <RefreshCw className="h-3 w-3 animate-spin" />
+                            大纲拆解中...
+                          </div>
+                        )}
+                        {doc.status === "success" && (
+                          <div className="inline-flex items-center gap-1 text-[11px] font-semibold text-emerald-700 bg-emerald-50 px-2.5 py-0.5 rounded-full border border-emerald-150 select-none">
+                            <CheckCircle className="h-3.5 w-3.5 text-emerald-500" />
+                            高保真已启用
+                          </div>
+                        )}
+                        {doc.status === "disabled" && (
+                          <div className="inline-flex items-center gap-1 text-[11px] font-semibold text-slate-600 bg-slate-100 px-2.5 py-0.5 rounded-full border border-slate-200 select-none">
+                            <EyeOff className="h-3.5 w-3.5 text-slate-400" />
+                            已人工禁用
+                          </div>
+                        )}
+                        {doc.status === "failed" && (
+                          <div className="inline-flex items-center gap-1 text-[11px] font-semibold text-red-700 bg-red-50 px-2.5 py-0.5 rounded-full border border-red-150 select-none" title="格式不支持或文本过长损坏">
+                            <AlertCircle className="h-3.5 w-3.5 text-red-500" />
+                            解析失败
+                          </div>
+                        )}
+                      </td>
+                      <td className="px-6 py-4 text-slate-400 font-mono">{doc.uploadedAt}</td>
+                      <td className="px-6 py-4 text-right">
+                        <div className="flex items-center justify-end gap-2">
+                          {/* Ops Actions: Enable/Disable, Reindex */}
+                          {opsMode && (doc.status === "success" || doc.status === "disabled") && (
+                            <>
+                              {/* Toggle visibility */}
+                              <button
+                                onClick={() => handleToggleStatus(doc.id, doc.status)}
+                                className={`p-1.5 rounded-lg border text-xs font-semibold transition-all focus:outline-none ${
+                                  doc.status === "disabled"
+                                    ? "bg-emerald-50 text-emerald-600 border-emerald-200 hover:bg-emerald-100"
+                                    : "bg-slate-50 text-slate-600 border-slate-200 hover:bg-slate-100"
+                                }`}
+                                title={doc.status === "disabled" ? "启用该文档，使其能够被对话召回" : "禁用该文档，使其暂时不参与召回"}
+                              >
+                                {doc.status === "disabled" ? (
+                                  <span className="flex items-center gap-1"><Eye className="h-3.5 w-3.5" />启用</span>
+                                ) : (
+                                  <span className="flex items-center gap-1"><EyeOff className="h-3.5 w-3.5" />禁用</span>
+                                )}
+                              </button>
+
+                              {/* Trigger Manual Reindex */}
+                              <button
+                                onClick={() => handleReindex(doc.id, doc.name)}
+                                className="p-1.5 rounded-lg border bg-slate-50 hover:bg-indigo-50 text-slate-600 hover:text-indigo-600 border-slate-200 hover:border-indigo-150 text-xs font-semibold transition-all focus:outline-none"
+                                title="手动重索引该文档"
+                              >
+                                <span className="flex items-center gap-1">
+                                  <RefreshCw className="h-3.5 w-3.5" />
+                                  重索引
+                                </span>
+                              </button>
+                            </>
+                          )}
+
+                          {/* Expanded view trigger for chunks */}
+                          {opsMode && (doc.status === "success" || doc.status === "disabled") && (
+                            <button
+                              onClick={() => handleToggleExpand(doc.id)}
+                              className={`p-1.5 rounded-lg border text-xs font-semibold transition-all focus:outline-none ${
+                                isExpanded
+                                  ? "bg-indigo-600 text-white border-indigo-600 hover:bg-indigo-700"
+                                  : "bg-indigo-50 text-indigo-600 border-indigo-150 hover:bg-indigo-100"
+                              }`}
+                              title="查看并管理所有物理切片"
+                            >
+                              <span className="flex items-center gap-1">
+                                <Database className="h-3.5 w-3.5" />
+                                {isExpanded ? "收起切片" : "查看切片"}
+                              </span>
+                            </button>
+                          )}
+
+                          {/* Original Reparse Action */}
+                          {!opsMode && doc.status !== "uploading" && (
+                            <button
+                              onClick={() => handleReindex(doc.id, doc.name)}
+                              disabled={doc.status === "parsing"}
+                              className="p-1 hover:bg-slate-100 rounded text-slate-400 hover:text-indigo-600 disabled:opacity-40 transition-colors focus:outline-none focus:ring-2 focus:ring-indigo-400"
+                              title="重新解析此文件并重构向量树"
+                              aria-label={`重新解析文件: ${doc.name}`}
+                            >
+                              <RefreshCw className={`h-3.5 w-3.5 ${doc.status === "parsing" ? "animate-spin" : ""}`} />
+                            </button>
+                          )}
+
+                          {/* Physically delete document */}
+                          <button
+                            onClick={() => deleteDocument(doc.id)}
+                            className="p-1 hover:bg-slate-100 rounded text-slate-400 hover:text-red-500 transition-colors focus:outline-none focus:ring-2 focus:ring-red-400"
+                            title="物理删除切片"
+                            aria-label={`物理删除文件: ${doc.name}`}
+                          >
+                            <Trash2 className="h-3.5 w-3.5" />
+                          </button>
+                        </div>
+                      </td>
+                    </tr>
+
+                    {/* Collapsible Section for ChunkList */}
+                    {opsMode && isExpanded && (
+                      <tr>
+                        <td colSpan={6} className="px-6 py-4 bg-slate-50/20 border-t border-b border-slate-150">
+                          <ChunkList 
+                            docId={doc.id} 
+                            docName={doc.name} 
+                            onCountChanged={() => {
+                              // We can trigger parent or context update if needed
+                            }}
+                          />
+                        </td>
+                      </tr>
                     )}
-                    {doc.status === "parsing" && (
-                      <div className="inline-flex items-center gap-1.5 text-[11px] font-semibold text-indigo-600 bg-indigo-50/50 px-2.5 py-0.5 rounded-full border border-indigo-100 select-none">
-                        <RefreshCw className="h-3 w-3 animate-spin" />
-                        本地大纲拆解中...
-                      </div>
-                    )}
-                    {doc.status === "success" && (
-                      <div className="inline-flex items-center gap-1 text-[11px] font-semibold text-emerald-700 bg-emerald-50 px-2.5 py-0.5 rounded-full border border-emerald-150 select-none">
-                        <CheckCircle className="h-3.5 w-3.5 text-emerald-500" />
-                        高保真已解析
-                      </div>
-                    )}
-                    {doc.status === "failed" && (
-                      <div className="inline-flex items-center gap-1 text-[11px] font-semibold text-red-700 bg-red-50 px-2.5 py-0.5 rounded-full border border-red-150 select-none" title="格式不支持或文本过长损坏">
-                        <AlertCircle className="h-3.5 w-3.5 text-red-500" />
-                        解析失败
-                      </div>
-                    )}
-                  </td>
-                  <td className="px-6 py-4 text-slate-400 font-mono">{doc.uploadedAt}</td>
-                  <td className="px-6 py-4 text-right">
-                    <div className="flex items-center justify-end gap-2.5">
-                      {doc.status !== "uploading" && (
-                        <button
-                          onClick={() => reparseDocument(doc.id)}
-                          disabled={doc.status === "parsing"}
-                          className="p-1 hover:bg-slate-100 rounded text-slate-400 hover:text-indigo-600 disabled:opacity-40 transition-colors focus:outline-none focus:ring-2 focus:ring-indigo-400"
-                          title="重新解析此文件并重构向量树"
-                          aria-label={`重新解析文件: ${doc.name}`}
-                        >
-                          <RefreshCw className={`h-3.5 w-3.5 ${doc.status === "parsing" ? "animate-spin" : ""}`} />
-                        </button>
-                      )}
-                      <button
-                        onClick={() => deleteDocument(doc.id)}
-                        className="p-1 hover:bg-slate-100 rounded text-slate-400 hover:text-red-500 transition-colors focus:outline-none focus:ring-2 focus:ring-red-400"
-                        title="物理删除切片"
-                        aria-label={`物理删除文件: ${doc.name}`}
-                      >
-                        <Trash2 className="h-3.5 w-3.5" />
-                      </button>
-                    </div>
-                  </td>
-                </tr>
-              ))}
+                  </React.Fragment>
+                );
+              })}
             </tbody>
           </table>
         )}

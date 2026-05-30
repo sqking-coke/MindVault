@@ -108,7 +108,7 @@ The default brief includes the commands needed for the core agent loop and commo
 
 ### Core
 - `multica issue get <id> --output json` — Get full issue details.
-- `multica issue comment list <issue-id> [--thread <comment-id> [--tail N] | --recent N] [--before <ts> --before-id <uuid>] [--since <RFC3339>] --output json` — List comments on an issue. Default returns the full flat timeline (server cap 2000). On busy issues prefer the thread-aware reads: `--thread <comment-id>` returns one conversation (root + every reply); `--thread <id> --tail N` caps replies to the N most recent (root is always included, even at `--tail 0`); `--recent N` returns the N most recently active threads. `--before` / `--before-id` walks older replies under `--thread --tail` (stderr label: `Next reply cursor`) or older threads under `--recent` (stderr label: `Next thread cursor`). `--since` is for incremental polling and may combine with `--thread --tail` or `--recent`.
+- `multica issue comment list <issue-id> [--thread <comment-id> [--tail N] | --recent N] [--before <ts> --before-id <uuid>] [--since <RFC3339>] --output json` — List comments on an issue. Default returns the full flat timeline (server cap 2000). On busy issues prefer the thread-aware reads: `--thread <comment-id>` returns one conversation (root + every reply); `--thread <id> --tail N` caps replies to the N most recent (root is always included, even at `--tail 0`); `--recent N` returns the N most recently active threads. `--before` / `--before-id` walks older replies under `--thread --tail` (stderr label: `Next reply cursor`) or older threads under `--recent` (stderr label: `Next thread cursor`). `--since` is for incremental polling and may combine with `--thread` (with or without `--tail`) or `--recent`.
 - `multica issue create --title "..." [--description "..." | --description-stdin | --description-file <path>] [--priority X] [--status X] [--assignee X | --assignee-id <uuid>] [--parent <issue-id>] [--project <project-id>] [--due-date <RFC3339>] [--attachment <path>]` — Create a new issue; `--attachment` may be repeated.
 - `multica issue update <id> [--title X] [--description X | --description-stdin | --description-file <path>] [--priority X] [--status X] [--assignee X | --assignee-id <uuid>] [--parent <issue-id>] [--project <project-id>] [--due-date <RFC3339>]` — Update issue fields; use `--parent ""` to clear parent.
 - `multica repo checkout <url> [--ref <branch-or-sha>]` — Check out a repository into the working directory (creates a git worktree with a dedicated branch; use `--ref` for review/QA on a specific branch, tag, or commit)
@@ -123,7 +123,7 @@ The default brief includes the commands needed for the core agent loop and commo
 The following code repositories are available in this workspace.
 Use `multica repo checkout <url>` to check out a repository into your working directory. Add `--ref <branch-or-sha>` when you need an exact branch, tag, or commit.
 
-- git@github.com:sqking-coke/MindVault.git
+- git@github.com:sqking-coke/mindvaultss.git
 
 The checkout command creates a git worktree with a dedicated branch. You can check out one or more repos as needed, and can pass `--ref` for review/QA on a non-default branch or commit.
 
@@ -133,8 +133,8 @@ This issue belongs to **本地私有知识库问答 Agent**.
 
 Project resources (also written to `.multica/project/resources.json`):
 
-- **GitHub repo**: git@github.com:sqking-coke/MindVault.git
-- **local_directory**: `{"label":"MindVault","daemon_id":"019e6904-ec5c-7412-8328-40d10b86ce39","local_path":"/Users/wsq/work/Agent/MindVault"}`
+- **GitHub repo**: git@github.com:sqking-coke/mindvaultss.git
+- **local_directory**: `{"label":"mindvaultss","daemon_id":"019e6904-ec5c-7412-8328-40d10b86ce39","local_path":"/Users/wsq/work/Agent/mindvaultss"}`
 
 Resources are pointers — open them only when relevant to the task. For `github_repo` resources, use `multica repo checkout <url>` to fetch the code. Add `--ref <branch-or-sha>` when a task or handoff names an exact revision.
 
@@ -152,21 +152,19 @@ Each issue carries a small KV `metadata` bag — a high-signal scratchpad where 
 
 **This task was triggered by a NEW comment.** Your primary job is to respond to THIS specific comment, even if you have handled similar requests before in this session.
 
-1. Run `multica issue get aef35a81-5124-4828-90ce-6217dabc28a6 --output json` to understand the issue context
-2. Run `multica issue metadata list aef35a81-5124-4828-90ce-6217dabc28a6 --output json` to see what prior agents pinned — best-effort, empty `{}` and CLI failures are normal. See the `## Issue Metadata` section above for what to look for.
-3. Read the triggering thread first — that is what this comment is actually about. Default to the 30 most recent replies in that thread: `multica issue comment list aef35a81-5124-4828-90ce-6217dabc28a6 --thread fd78ad97-58db-4e51-b282-7d6573b17730 --tail 30 --output json` returns the root + the 30 newest replies (root is always included, even at `--tail 0`).
-   - If 30 replies aren't enough, walk older replies in the same thread one page at a time using the stderr `Next reply cursor: --before <ts> --before-id <reply-id>` line — pass the same pair back as `--before <ts> --before-id <reply-id>` on the next call. Under `--thread --tail` the cursor walks older *replies*, not older threads.
-   - If you also need cross-thread background, pull the most recently active threads on the issue: `multica issue comment list aef35a81-5124-4828-90ce-6217dabc28a6 --recent 20 --output json`. Under `--recent` the same `--before` / `--before-id` flags walk older *threads* instead of older replies, and the stderr line is `Next thread cursor: --before <ts> --before-id <root-id>`. Pass the pair back to scroll to older threads when 20 still isn't enough.
-   - Avoid the unfiltered `multica issue comment list <issue-id> --output json` form on long-running issues — it dumps the entire flat timeline (cap 2000) and wastes context on chatter unrelated to the trigger. `--since <RFC3339-timestamp>` is still available for incremental polling against a known cursor and may combine with `--thread --tail` or `--recent`.
-4. Find the triggering comment (ID: `fd78ad97-58db-4e51-b282-7d6573b17730`) inside the thread you just read and understand what is being asked — do NOT confuse it with previous comments
+1. Run `multica issue get 31726112-6821-487d-95d0-a8daba4cdd4e --output json` to understand the issue context
+2. Run `multica issue metadata list 31726112-6821-487d-95d0-a8daba4cdd4e --output json` to see what prior agents pinned — best-effort, empty `{}` and CLI failures are normal. See the `## Issue Metadata` section above for what to look for.
+3. You're resuming the prior session, and the triggering comment is already included above. No other new comments on this issue since your last run. Do not re-read comment history by default. Only if the resumed session is missing thread context, pull the triggering conversation: `multica issue comment list 31726112-6821-487d-95d0-a8daba4cdd4e --thread 2bf69639-8759-48c7-a05e-bfbb751614e6 --tail 30 --output json`.
+
+4. Find the triggering comment (ID: `2bf69639-8759-48c7-a05e-bfbb751614e6`) and understand what is being asked — do NOT confuse it with previous comments
 5. **Decide whether a reply is warranted.** If you produced actual work this turn (investigated, fixed, answered a real question), post the result via step 7 — that is a normal reply, not a noise comment. If the triggering comment was a pure acknowledgment / thanks / sign-off from another agent AND you produced no work this turn, do NOT post a reply — and do NOT post a comment saying 'No reply needed' or similar. Simply exit with no output. Silence is a valid and preferred way to end agent-to-agent conversations.
-   - **Squad leader rule:** If your evaluation outcome is `no_action`, call `multica squad activity aef35a81-5124-4828-90ce-6217dabc28a6 no_action --reason "..."` and then EXIT IMMEDIATELY. DO NOT post any comment whose only purpose is to announce that you are taking no action, exiting silently, or acknowledging another agent. A comment like "No action needed" or "Exiting silently" is noise — the `squad activity` call already records your decision in the timeline.
+   - **Squad leader rule:** If your evaluation outcome is `no_action`, call `multica squad activity 31726112-6821-487d-95d0-a8daba4cdd4e no_action --reason "..."` and then EXIT IMMEDIATELY. DO NOT post any comment whose only purpose is to announce that you are taking no action, exiting silently, or acknowledging another agent. A comment like "No action needed" or "Exiting silently" is noise — the `squad activity` call already records your decision in the timeline.
 6. If a reply IS warranted: do any requested work first, then **decide whether to include any `@mention` link.** The default is NO mention. Only mention when you are escalating to a human owner who is not yet involved, delegating a concrete new sub-task to another agent for the first time, or the user explicitly asked you to loop someone in. Never @mention the agent you are replying to as a thank-you or sign-off.
 7. **If you reply, post it as a comment — this step is mandatory when you reply.** Text in your terminal or run logs is NOT delivered to the user. If you decide to reply, post it as a comment — always use the trigger comment ID below, do NOT reuse --parent values from previous turns in this session.
 
 Use this form, preserving the same issue ID and --parent value:
 
-    multica issue comment add aef35a81-5124-4828-90ce-6217dabc28a6 --parent fd78ad97-58db-4e51-b282-7d6573b17730 --content "..."
+    multica issue comment add 31726112-6821-487d-95d0-a8daba4cdd4e --parent 2bf69639-8759-48c7-a05e-bfbb751614e6 --content "..."
 
 For multi-line bodies, code blocks, or content with quotes/backticks, prefer `--content-stdin` (pipe a HEREDOC) or `--content-file <path>` (read a UTF-8 file). See Available Commands above for the full menu.
 8. Before exiting: only if this run produced a fact that clears the high bar (important AND likely to be re-read by future runs on this same issue, e.g. a new PR URL or deploy URL), or you noticed a metadata key from entry that is now stale, pin or clear it via `multica issue metadata set`/`delete`. Most runs write nothing here — that is the expected outcome, not a gap. When in doubt, do not write. See the `## Issue Metadata` section above for the full bar.

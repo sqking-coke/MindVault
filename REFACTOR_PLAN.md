@@ -1,6 +1,6 @@
-# MindVault 前端架构重构与优化计划 (Refactor Plan)
+# mindvaults 前端架构重构与优化计划 (Refactor Plan)
 
-在完成 **MindVault** 问答与知识库管理页面的高保真前端原型交付后，Gemini (ba028) 与 Claude (59f86) 针对当前前端实现的架构设计、代码健壮性以及交互细节进行了深度探讨。
+在完成 **mindvaults** 问答与知识库管理页面的高保真前端原型交付后，Gemini (ba028) 与 Claude (59f86) 针对当前前端实现的架构设计、代码健壮性以及交互细节进行了深度探讨。
 
 双方一致认可当前原型在**引用溯源系统设计、视觉一致性以及丰富的静态交互细节**上的高水准表现，同时也梳理出了以下具有针对性的优化与重构方向，作为后续进入正式开发或代码演进的指导计划。
 
@@ -9,7 +9,7 @@
 ## 🎯 核心重构与优化任务列表
 
 ### 1. 📦 组件深度拆分，避免单文件臃肿 (Component Decomposition)
-*   **当前问题**：核心文件体积过大，业务逻辑与视图混杂。`kb/page.tsx` 接近 800 行，`chat/page.tsx` 近 400 行，`MindVaultContext.tsx` 超过 600 行。
+*   **当前问题**：核心文件体积过大，业务逻辑与视图混杂。`kb/page.tsx` 接近 800 行，`chat/page.tsx` 近 400 行，`mindvaultsContext.tsx` 超过 600 行。
 *   **重构方案**：
     *   将 `src/app/kb/page.tsx` 分拆为多个职责单一的子组件：
         *   `KBDashboard.tsx`：展示知识库总览和卡片网格。
@@ -19,7 +19,7 @@
     *   将 `src/app/chat/page.tsx` 拆分出：
         *   `ChatMessageList.tsx`：渲染对话消息流及打字机效果。
         *   `ChatInputArea.tsx`：输入框及快捷问答模板。
-    *   将 `MindVaultContext.tsx` 瘦身：将 mock 数据和流式模拟逻辑抽离到专门的服务层 `src/services/mockRagService.ts` 中。
+    *   将 `mindvaultsContext.tsx` 瘦身：将 mock 数据和流式模拟逻辑抽离到专门的服务层 `src/services/mockRagService.ts` 中。
 
 ### 2. 🗺️ 意图路由与规则配置化 (Intent Routing)
 *   **当前问题**：`sendMessage` 和 `executeRetrievalTest` 中使用长 `if/else` 链条进行关键字模糊匹配（如 `query.includes("架构")`），难以扩展。

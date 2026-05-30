@@ -10,20 +10,31 @@ import type {
   RefChunk,
   Citation,
   ChatHistoryRecord,
+  OverviewStats,
+  FrequentQuestionsResponse,
+  UnansweredListResponse,
 } from "@/types/api";
 import { refChunkToCitation } from "@/types/api";
 import * as api from "./apiClient";
 
+export type { OverviewStats, FrequentQuestionsResponse, UnansweredListResponse };
+
 // ==================== 类型转换 ====================
 
 export function kbDocumentToDocRecord(doc: KbDocument): DocumentRecord {
+  let status: "uploading" | "parsing" | "success" | "failed" | "disabled" = "failed";
+  if (doc.status === 0) status = "failed";
+  else if (doc.status === 1) status = "parsing";
+  else if (doc.status === 2) status = "success";
+  else if (doc.status === 3) status = "disabled";
+
   return {
     id: String(doc.id),
     kbId: "kb-default",
     name: doc.doc_name,
     size: "—",
     chars: doc.chunk_count,
-    status: doc.status === 1 ? "success" : "failed",
+    status,
     progress: 100,
     uploadedAt: doc.created_at?.replace("T", " ").substring(0, 16) || "",
     type: doc.doc_type,
@@ -102,6 +113,80 @@ export async function uploadDocuments(
 
 export async function deleteDocument(docId: number, signal?: AbortSignal): Promise<void> {
   await api.del(`/api/v1/kb/documents/${docId}`, signal);
+}
+
+export async function toggleDocumentStatus(
+  docId: number,
+  status: "disabled" | "enabled",
+  signal?: AbortSignal,
+): Promise<KbDocument> {
+  return api.put<KbDocument>(`/api/v1/kb/documents/${docId}/status`, { status }, signal);
+}
+
+export async function reindexDocument(
+  docId: number,
+  signal?: AbortSignal,
+): Promise<{ doc_id: number; doc_name: string; status: string; message: string }> {
+  return api.post<{ doc_id: number; doc_name: string; status: string; message: string }>(
+    `/api/v1/kb/documents/${docId}/reindex`,
+    undefined,
+    signal,
+  );
+}
+
+export interface ChunkItem {
+  id: number;
+  chunk_index: number;
+  content: string;
+  page: number | null;
+  created_at: string;
+}
+
+export async function fetchDocChunks(
+  docId: number,
+  page = 1,
+  pageSize = 20,
+  signal?: AbortSignal,
+): Promise<{ items: ChunkItem[]; total: number }> {
+  return api.get<{ items: ChunkItem[]; total: number }>(
+    `/api/v1/kb/documents/${docId}/chunks?page=${page}&page_size=${pageSize}`,
+    signal,
+  );
+}
+
+export async function updateChunk(
+  chunkId: number,
+  content: string,
+  signal?: AbortSignal,
+): Promise<{ id: number; chunk_index: number; content: string; page: number | null; updated_at: string }> {
+  return api.put<{ id: number; chunk_index: number; content: string; page: number | null; updated_at: string }>(
+    `/api/v1/kb/chunks/${chunkId}`,
+    { content },
+    signal,
+  );
+}
+
+export async function deleteChunk(chunkId: number, signal?: AbortSignal): Promise<void> {
+  await api.del(`/api/v1/kb/chunks/${chunkId}`, signal);
+}
+
+export async function fetchOverviewStats(signal?: AbortSignal): Promise<OverviewStats> {
+  return api.get<OverviewStats>("/api/v1/kb/stats/overview", signal);
+}
+
+export async function fetchFrequentQuestions(
+  topN = 10,
+  signal?: AbortSignal,
+): Promise<FrequentQuestionsResponse> {
+  return api.get<FrequentQuestionsResponse>(`/api/v1/kb/stats/frequent-questions?top_n=${topN}`, signal);
+}
+
+export async function fetchUnanswered(
+  page = 1,
+  pageSize = 20,
+  signal?: AbortSignal,
+): Promise<UnansweredListResponse> {
+  return api.get<UnansweredListResponse>(`/api/v1/kb/stats/unanswered?page=${page}&page_size=${pageSize}`, signal);
 }
 
 // ==================== 会话 API ====================

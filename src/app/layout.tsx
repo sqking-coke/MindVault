@@ -1,9 +1,9 @@
 import type { Metadata } from "next";
 import "./globals.css";
-import { MindVaultProvider } from "@/context/MindVaultContext";
+import { mindvaultsProvider } from "@/context/mindvaultsContext";
 
 export const metadata: Metadata = {
-  title: "MindVault - 本地私有化知识库",
+  title: "mindvaults - 本地私有化知识库",
   description: "本地私有化知识库问答 Agent UI/UX 原型",
 };
 
@@ -19,9 +19,9 @@ export default function RootLayout({
         <meta name="viewport" content="width=device-width, initial-scale=1" />
       </head>
       <body className="h-full font-sans antialiased bg-slate-50 text-slate-900 selection:bg-indigo-100">
-        <MindVaultProvider>
+        <mindvaultsProvider>
           {children}
-        </MindVaultProvider>
+        </mindvaultsProvider>
       </body>
     </html>
   );

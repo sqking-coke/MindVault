@@ -8,7 +8,7 @@ from app.models.chunk import KbChunk
 from app.models.document import KbDocument, DOC_STATUS_PROCESSING, DOC_STATUS_COMPLETED, DOC_STATUS_FAILED
 from app.models.config import KbConfig
 from app.services.parser_service import parse_document
-from app.services.chunking_service import chunk_text
+from app.services.chunking_service import chunk_pages
 from app.services.embedding_service import embed_text
 
 
@@ -25,9 +25,9 @@ async def ingest_document(db: AsyncSession, doc_id: int, doc_type: str, file_pat
         doc.status = DOC_STATUS_PROCESSING
         await db.flush()
 
-        # 1. 解析文档
-        text = await parse_document(file_path, doc_type)
-        if not text:
+        # 1. 解析文档，返回 [(text, page_number), ...]
+        pages = await parse_document(file_path, doc_type)
+        if not pages:
             logger.warning(f"文档解析无内容: id={doc_id} path={file_path}")
             doc.status = DOC_STATUS_FAILED
             await db.commit()
@@ -35,21 +35,21 @@ async def ingest_document(db: AsyncSession, doc_id: int, doc_type: str, file_pat
 
         # 2. 读取配置
         config = await _get_or_create_config(db)
-        # 3. 切片（默认 semantic 语义模式，利用 langchain 分隔符拆分）
-        chunks_text = await chunk_text(
-            text,
+        # 3. 逐页切片，保留页码信息
+        chunks_with_pages = await chunk_pages(
+            pages,
             chunk_size=config.chunk_size,
             chunk_overlap=config.chunk_overlap,
             mode="semantic",
         )
-        if not chunks_text:
+        if not chunks_with_pages:
             logger.warning(f"文档切片为空: id={doc_id}")
             doc.status = DOC_STATUS_FAILED
             await db.commit()
             return
 
         # 4. 向量化 + 入库（逐条处理，避免内存溢出）
-        for idx, chunk_content in enumerate(chunks_text):
+        for idx, (chunk_content, page_num) in enumerate(chunks_with_pages):
             try:
                 embedding = await embed_text(chunk_content)
             except Exception as exc:
@@ -61,17 +61,18 @@ async def ingest_document(db: AsyncSession, doc_id: int, doc_type: str, file_pat
                 chunk_index=idx,
                 content=chunk_content,
                 embedding=embedding,
+                page=page_num,
             )
             db.add(chunk_record)
 
         await db.flush()
 
         # 5. 更新文档状态：完成
-        doc.chunk_count = len(chunks_text)
+        doc.chunk_count = len(chunks_with_pages)
         doc.status = DOC_STATUS_COMPLETED
         await db.commit()
         logger.info(
-            f"文档摄入完成: id={doc_id} type={doc_type} chunks={len(chunks_text)}"
+            f"文档摄入完成: id={doc_id} type={doc_type} chunks={len(chunks_with_pages)}"
         )
 
     except Exception as exc:

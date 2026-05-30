@@ -3,9 +3,9 @@ requires = ["setuptools>=68.0"]
 build-backend = "setuptools.build_meta"
 
 [project]
-name = "mindvault"
+name = "mindvaults"
 version = "0.1.0"
-description = "MindVault - 本地私有知识库问答系统后端"
+description = "mindvaults - 本地私有知识库问答系统后端"
 readme = "README.md"
 requires-python = ">=3.11"
 dependencies = [
@@ -24,6 +24,7 @@ dependencies = [
     "redis==5.2.1",
     "python-docx==1.1.2",
     "PyPDF2==3.0.1",
+    "pdfplumber==0.11.4",
     "markdown==3.7",
     "langchain-text-splitters==0.3.2",
     "slowapi==0.1.9",

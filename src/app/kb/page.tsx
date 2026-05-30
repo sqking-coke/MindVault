@@ -6,7 +6,7 @@ import KBDashboard from "@/components/kb/KBDashboard";
 import DocumentTable from "@/components/kb/DocumentTable";
 import UploadZone from "@/components/kb/UploadZone";
 import RetrievalSandbox from "@/components/kb/RetrievalSandbox";
-import { useMindVault } from "@/context/MindVaultContext";
+import { usemindvaults } from "@/context/mindvaultsContext";
 import { 
   Database, 
   ArrowLeft, 
@@ -20,7 +20,7 @@ export default function KBPage() {
     knowledgeBases, 
     activeKbId, 
     setActiveKbId 
-  } = useMindVault();
+  } = usemindvaults();
 
   // Navigation states
   const [kbTab, setKbTab] = useState<"docs" | "test">("docs");

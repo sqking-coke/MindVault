@@ -10,6 +10,7 @@ from app.models import Base
 DOC_STATUS_FAILED = 0       # 摄入失败
 DOC_STATUS_PROCESSING = 1   # 摄入处理中 / 待处理
 DOC_STATUS_COMPLETED = 2    # 摄入完成，可检索
+DOC_STATUS_DISABLED = 3     # 人工禁用
 
 
 class KbDocument(Base):

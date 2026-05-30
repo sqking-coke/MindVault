@@ -1,7 +1,7 @@
 "use client";
 
 import React, { useState } from "react";
-import { useMindVault } from "@/context/MindVaultContext";
+import { usemindvaults } from "@/context/mindvaultsContext";
 import { Upload } from "lucide-react";
 
 interface UploadZoneProps {
@@ -12,7 +12,7 @@ export default function UploadZone({ showToast }: UploadZoneProps) {
   const { 
     activeKbId, 
     uploadDocuments 
-  } = useMindVault();
+  } = usemindvaults();
 
   const [isDragging, setIsDragging] = useState(false);
 

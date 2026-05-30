@@ -53,7 +53,7 @@ export default function KnowledgeCard({ question, answer, citations, onClose }: 
         useCORS: true,
       });
       const link = document.createElement("a");
-      link.download = `MindVault-知识卡片-${Date.now()}.png`;
+      link.download = `mindvaults-知识卡片-${Date.now()}.png`;
       link.href = canvas.toDataURL("image/png");
       link.click();
     } catch (err) {
@@ -116,7 +116,7 @@ export default function KnowledgeCard({ question, answer, citations, onClose }: 
             <div className="h-8 w-8 rounded-lg bg-gradient-to-tr from-indigo-500 to-violet-600 flex items-center justify-center">
               <Share2 className="h-4 w-4 text-white" />
             </div>
-            <span className={`text-xs font-bold tracking-wider ${s.accent}`}>MindVault 知识卡片</span>
+            <span className={`text-xs font-bold tracking-wider ${s.accent}`}>mindvaults 知识卡片</span>
           </div>
 
           <h3 className={`text-base font-bold mb-3 ${s.text}`}>{question}</h3>
@@ -142,7 +142,7 @@ export default function KnowledgeCard({ question, answer, citations, onClose }: 
 
           <div className={`mt-4 pt-3 border-t ${skin === "dark" ? "border-slate-700" : "border-slate-200"} flex items-center justify-between`}>
             <span className={`text-[10px] ${skin === "dark" ? "text-slate-500" : "text-slate-400"}`}>
-              由 MindVault 本地私有知识库生成
+              由 mindvaults 本地私有知识库生成
             </span>
             <span className={`text-[10px] font-mono ${skin === "dark" ? "text-slate-600" : "text-slate-300"}`}>
               {new Date().toLocaleDateString("zh-CN")}

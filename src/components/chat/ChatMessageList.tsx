@@ -1,7 +1,7 @@
 "use client";
 
 import React, { useRef, useEffect, useState } from "react";
-import { useMindVault, Message, Citation } from "@/context/MindVaultContext";
+import { usemindvaults, Message, Citation } from "@/context/mindvaultsContext";
 import { 
   Sparkles, 
   ChevronRight, 
@@ -13,6 +13,7 @@ import {
   Share2
 } from "lucide-react";
 import KnowledgeCard from "./KnowledgeCard";
+import WechatExport from "./WechatExport";
 
 interface ChatMessageListProps {
   onSelectTemplate: (text: string) => void;
@@ -24,10 +25,16 @@ export default function ChatMessageList({ onSelectTemplate }: ChatMessageListPro
     activeConversationId, 
     isGenerating, 
     setSelectedCitation 
-  } = useMindVault();
+  } = usemindvaults();
 
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const [sharingCard, setSharingCard] = useState<{
+    question: string;
+    answer: string;
+    citations: Citation[];
+  } | null>(null);
+
+  const [wechatExportData, setWechatExportData] = useState<{
     question: string;
     answer: string;
     citations: Citation[];
@@ -46,7 +53,7 @@ export default function ChatMessageList({ onSelectTemplate }: ChatMessageListPro
   const promptTemplates = [
     {
       label: "系统架构提问",
-      text: "请问 MindVault 的底层架构是怎么设计的？它是怎么保障私有数据的安全问答的？",
+      text: "请问 mindvaults 的底层架构是怎么设计的？它是怎么保障私有数据的安全问答的？",
       icon: "⚡"
     },
     {
@@ -56,7 +63,7 @@ export default function ChatMessageList({ onSelectTemplate }: ChatMessageListPro
     },
     {
       label: "混合向量检索",
-      text: "解释一下 MindVault 的向量嵌入 Embedding 与重排 Reranking 检索过滤原理。",
+      text: "解释一下 mindvaults 的向量嵌入 Embedding 与重排 Reranking 检索过滤原理。",
       icon: "🔍"
     },
     {
@@ -118,7 +125,7 @@ export default function ChatMessageList({ onSelectTemplate }: ChatMessageListPro
               <div className="h-14 w-14 rounded-2xl bg-gradient-to-tr from-indigo-500 to-violet-600 flex items-center justify-center shadow-lg shadow-indigo-500/20 mx-auto">
                 <Sparkles className="h-7 w-7 text-white" />
               </div>
-              <h2 className="text-xl font-bold text-slate-900">MindVault 智能问答沙盒</h2>
+              <h2 className="text-xl font-bold text-slate-900">mindvaults 智能问答沙盒</h2>
               <p className="text-xs text-slate-400 max-w-md mx-auto leading-relaxed">
                 本地离线大语言模型驱动，安全解析您的文档资产。支持多格式解析、高精度向量相似度定位与引用溯源展示。
               </p>
@@ -266,23 +273,45 @@ export default function ChatMessageList({ onSelectTemplate }: ChatMessageListPro
                         <span>{msg.timestamp}</span>
                       </div>
                       {!isUser && msg.content.length > 20 && (
-                        <button
-                          onClick={() => {
-                            const prevMsg = activeConversation.messages[idx - 1];
-                            const questionText = prevMsg && prevMsg.role === "user" ? prevMsg.content : "关于 MindVault 的提问";
-                            setSharingCard({
-                              question: questionText,
-                              answer: msg.content,
-                              citations: msg.citations || [],
-                            });
-                          }}
-                          className="flex items-center gap-1 text-indigo-600 hover:text-indigo-800 font-medium transition-colors cursor-pointer select-none border-none bg-transparent p-0"
-                          title="生成分享知识卡片"
-                          aria-label="生成分享知识卡片"
-                        >
-                          <Share2 className="h-3 w-3 text-indigo-500" />
-                          <span>分享卡片</span>
-                        </button>
+                        <>
+                          <button
+                            onClick={() => {
+                              const prevMsg = activeConversation.messages[idx - 1];
+                              const questionText = prevMsg && prevMsg.role === "user" ? prevMsg.content : "关于 mindvaults 的提问";
+                              setSharingCard({
+                                question: questionText,
+                                answer: msg.content,
+                                citations: msg.citations || [],
+                              });
+                            }}
+                            className="flex items-center gap-1 text-indigo-600 hover:text-indigo-800 font-medium transition-colors cursor-pointer select-none border-none bg-transparent p-0"
+                            title="生成分享知识卡片"
+                            aria-label="生成分享知识卡片"
+                          >
+                            <Share2 className="h-3 w-3 text-indigo-500" />
+                            <span>分享卡片</span>
+                          </button>
+
+                          <button
+                            onClick={() => {
+                              const prevMsg = activeConversation.messages[idx - 1];
+                              const questionText = prevMsg && prevMsg.role === "user" ? prevMsg.content : "关于 mindvaults 的提问";
+                              setWechatExportData({
+                                question: questionText,
+                                answer: msg.content,
+                                citations: msg.citations || [],
+                              });
+                            }}
+                            className="flex items-center gap-1 text-emerald-600 hover:text-emerald-800 font-medium transition-colors cursor-pointer select-none border-none bg-transparent p-0"
+                            title="微信公众号优雅排版导出"
+                            aria-label="微信公众号优雅排版导出"
+                          >
+                            <svg className="h-3 w-3 text-emerald-500" viewBox="0 0 24 24" fill="currentColor">
+                              <path d="M8.5,13.5A1.5,1.5 0 0,1 7,12A1.5,1.5 0 0,1 8.5,10.5A1.5,1.5 0 0,1 10,12A1.5,1.5 0 0,1 8.5,13.5M15.5,13.5A1.5,1.5 0 0,1 14,12A1.5,1.5 0 0,1 15.5,10.5A1.5,1.5 0 0,1 17,12A1.5,1.5 0 0,1 15.5,13.5M12,2A10,10 0 0,0 2,12C2,14.65 3,17.06 4.7,18.9L3.3,21.7C3.13,22.04 3.26,22.45 3.6,22.61C3.7,22.66 3.82,22.7 3.93,22.7C4.17,22.7 4.4,22.56 4.5,22.33L6.14,19.05C7.81,20.27 9.83,21 12,21A10,10 0 0,0 22,11A10,10 0 0,0 12,2M12,20C10.15,20 8.44,19.38 7.05,18.35L6.85,18.2L6.6,18.7L5.5,20.9L6.5,18.9L6.6,18.7L6.4,18.52C4.9,17 4,14.94 4,12C4,7.58 7.58,4 12,4C16.42,4 20,7.58 20,12C20,16.42 16.42,20 12,20Z" />
+                            </svg>
+                            <span>微信导出</span>
+                          </button>
+                        </>
                       )}
                     </div>
                   </div>
@@ -326,6 +355,15 @@ export default function ChatMessageList({ onSelectTemplate }: ChatMessageListPro
           answer={sharingCard.answer}
           citations={sharingCard.citations}
           onClose={() => setSharingCard(null)}
+        />
+      )}
+
+      {wechatExportData && (
+        <WechatExport
+          question={wechatExportData.question}
+          answer={wechatExportData.answer}
+          citations={wechatExportData.citations}
+          onClose={() => setWechatExportData(null)}
         />
       )}
     </div>

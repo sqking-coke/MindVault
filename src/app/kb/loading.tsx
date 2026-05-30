@@ -2,7 +2,7 @@
 
 import React from "react";
 import Sidebar from "@/components/layout/Sidebar";
-import { useMindVault } from "@/context/MindVaultContext";
+import { usemindvaults } from "@/context/mindvaultsContext";
 import { 
   Database, 
   ArrowLeft, 
@@ -15,7 +15,7 @@ export default function KBLoading() {
   const { 
     knowledgeBases, 
     activeKbId 
-  } = useMindVault();
+  } = usemindvaults();
 
   const activeKb = knowledgeBases.find(kb => kb.id === activeKbId);
 

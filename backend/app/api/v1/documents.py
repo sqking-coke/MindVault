@@ -1,4 +1,5 @@
 from fastapi import APIRouter, Depends, File, Query, Request, UploadFile
+from fastapi.responses import JSONResponse, FileResponse
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.api.deps import get_db
@@ -9,6 +10,9 @@ from app.schemas.document import (
     DocumentUploadResponse,
     DocumentListResponse,
     DocumentUpdateRequest,
+    DocumentStatusToggleRequest,
+    DocumentStatusToggleResponse,
+    ReindexResponse,
 )
 from app.services.document_service import (
     upload_documents,
@@ -16,6 +20,8 @@ from app.services.document_service import (
     get_document,
     update_document,
     soft_delete_document,
+    toggle_document_status,
+    reindex_document,
 )
 
 router = APIRouter(tags=["documents"])
@@ -62,8 +68,51 @@ async def update_doc(
     return success_response(result.model_dump())
 
 
+@router.put("/documents/{doc_id}/status")
+async def toggle_doc_status(
+    doc_id: int,
+    body: DocumentStatusToggleRequest,
+    db: AsyncSession = Depends(get_db),
+):
+    """切换文档禁用/启用状态。"""
+    result: DocumentStatusToggleResponse = await toggle_document_status(
+        db, doc_id, body.status
+    )
+    return success_response(result.model_dump())
+
+
+@router.post("/documents/{doc_id}/reindex")
+@limiter.limit("10/minute")
+async def reindex_doc(
+    request: Request,
+    doc_id: int,
+    db: AsyncSession = Depends(get_db),
+):
+    """文档重索引：删除旧 chunks → 清除缓存 → 重新摄入。"""
+    result: ReindexResponse = await reindex_document(db, doc_id)
+    return JSONResponse(
+        content=success_response(result.model_dump()),
+        status_code=202,
+    )
+
+
 @router.delete("/documents/{doc_id}")
 async def delete_doc(doc_id: int, db: AsyncSession = Depends(get_db)):
     """软删除文档。"""
     await soft_delete_document(db, doc_id)
     return success_response(None)
+
+
+@router.get("/documents/{doc_id}/file")
+async def get_doc_file(doc_id: int, db: AsyncSession = Depends(get_db)):
+    """获取文档物理文件。"""
+    import os
+    result = await get_document(db, doc_id)
+    if not os.path.exists(result.file_path):
+        from app.core.exceptions import DocNotFoundError
+        raise DocNotFoundError(f"文件未找到: {result.file_path}")
+    return FileResponse(
+        result.file_path,
+        media_type="application/pdf" if result.doc_type == "pdf" else "application/octet-stream",
+        filename=result.doc_name,
+    )

@@ -1,5 +1,5 @@
 // ============================================================
-// MindVault API 契约 — 前后端共同基准
+// mindvaults API 契约 — 前后端共同基准
 // 基于设计文档 v1.1 第 8 章 + 前端 Mock 原型数据模型
 // ============================================================
 
@@ -49,7 +49,7 @@ export interface KbDocument {
   doc_type: "txt" | "md" | "pdf" | "docx" | "doc";
   doc_desc: string | null;
   file_path: string;
-  status: 0 | 1; // 0=禁用, 1=启用
+  status: 0 | 1 | 2 | 3; // 0=失败, 1=解析中, 2=成功, 3=禁用
   chunk_count: number;
   created_at: string;
   updated_at: string;
@@ -103,7 +103,7 @@ export interface DocumentRecord {
   name: string;
   size: string;
   chars: number;
-  status: "uploading" | "parsing" | "success" | "failed";
+  status: "uploading" | "parsing" | "success" | "failed" | "disabled";
   progress: number; // 0~100
   uploadedAt: string;
   type?: string;
@@ -227,6 +227,42 @@ export interface ChunkLocateResponse {
   offset: number;
   highlight_anchor: string;
 }
+
+// ==================== 问答统计 API (P2) ====================
+
+export interface OverviewStats {
+  total_documents: number;
+  active_documents: number;
+  disabled_documents: number;
+  processing_documents: number;
+  total_chunks: number;
+  total_qa_records: number;
+  avg_similarity: number;
+  total_storage_bytes: number;
+  last_ingestion_at: string | null;
+  last_qa_at: string | null;
+}
+
+export interface FrequentQuestionItem {
+  rank: number;
+  question: string;
+  count: number;
+  last_asked_at: string;
+}
+
+export interface FrequentQuestionsResponse {
+  items: FrequentQuestionItem[];
+  total_unique_questions: number;
+}
+
+export interface UnansweredItem {
+  id: number;
+  question: string;
+  created_at: string;
+  session_id: number;
+}
+
+export interface UnansweredListResponse extends PaginatedData<UnansweredItem> {}
 
 // ==================== 健康检查 API ====================
 

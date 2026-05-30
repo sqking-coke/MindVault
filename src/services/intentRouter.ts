@@ -5,8 +5,8 @@ export const mockCitations: Citation[] = [
   {
     id: "cit-1",
     index: 1,
-    docName: "mindvault-arch-v2.pdf",
-    snippet: "MindVault 核心采用 Local RAG (Retrieval-Augmented Generation) 架构。文档在上传后会通过高精度 Parser 提取文本，经过 Chunking 策略（默认 500 tokens，重叠 10%）切分，并调用本地 Embedding 模型（如 bge-small-zh-v1.5）转化为 384 维向量，最后存入 HNSW 索引的高性能本地向量数据库中。",
+    docName: "mindvaults-arch-v2.pdf",
+    snippet: "mindvaults 核心采用 Local RAG (Retrieval-Augmented Generation) 架构。文档在上传后会通过高精度 Parser 提取文本，经过 Chunking 策略（默认 500 tokens，重叠 10%）切分，并调用本地 Embedding 模型（如 bge-small-zh-v1.5）转化为 384 维向量，最后存入 HNSW 索引的高性能本地向量数据库中。",
     score: 0.94,
     page: 2
   },
@@ -80,14 +80,14 @@ export const intentRoutes: IntentRoute[] = [
     intent: "architecture",
     patterns: ["架构", "设计", "安全", "向量", "db", "embedding"],
     priority: 20,
-    mockResponse: "MindVault 本地化架构的核心是实现极速的混合检索和端到端数据加密。\n\n- **本地嵌入与 HNSW 索引 [1]**：系统内部运行了 BGE 模型，无需公网即可实时提取文档的高维向量特征，并在本地向量数据库中建立高效的 HNSW (Hierarchical Navigable Small World) 近邻图，保证在万级文档切片中实现毫秒级向量召回。\n- **精排 Reranking [2]**：粗排后，使用 BCE Reranker 深度比对用户问题与文档切片，丢弃相关度低于阈值的块，从而实现超凡的答案精准度并消除幻觉。\n\n该流程保障了数据不出域的前提下，回答质量仍比肩公网 RAG 平台。",
-    answer: "MindVault 本地知识库的物理架构主要通过以下模块保障数据隔离与高准确召回：\n\n1. **高精度 Parser**：支持多文档自动格式抽取并过滤多余空格、排版噪声。\n2. **向量检索层 [1]**：文档分割（Chunking）后调用本地 BGE-Small-ZH 模型，该模型将文档块转化为稠密空间向量，存储在本地 HNSW 向量树上，实现亚毫秒级高并发检索召回。\n3. **混合过滤精排重构 [2]**：使用 Reranker 重排器进行精排，剔除无用文本，有效保障送入本地大语言模型的上下文信息纯净度，最大程度消除幻觉。",
+    mockResponse: "mindvaults 本地化架构的核心是实现极速的混合检索和端到端数据加密。\n\n- **本地嵌入与 HNSW 索引 [1]**：系统内部运行了 BGE 模型，无需公网即可实时提取文档的高维向量特征，并在本地向量数据库中建立高效的 HNSW (Hierarchical Navigable Small World) 近邻图，保证在万级文档切片中实现毫秒级向量召回。\n- **精排 Reranking [2]**：粗排后，使用 BCE Reranker 深度比对用户问题与文档切片，丢弃相关度低于阈值的块，从而实现超凡的答案精准度并消除幻觉。\n\n该流程保障了数据不出域的前提下，回答质量仍比肩公网 RAG 平台。",
+    answer: "mindvaults 本地知识库的物理架构主要通过以下模块保障数据隔离与高准确召回：\n\n1. **高精度 Parser**：支持多文档自动格式抽取并过滤多余空格、排版噪声。\n2. **向量检索层 [1]**：文档分割（Chunking）后调用本地 BGE-Small-ZH 模型，该模型将文档块转化为稠密空间向量，存储在本地 HNSW 向量树上，实现亚毫秒级高并发检索召回。\n3. **混合过滤精排重构 [2]**：使用 Reranker 重排器进行精排，剔除无用文本，有效保障送入本地大语言模型的上下文信息纯净度，最大程度消除幻觉。",
     relatedChunks: [
       {
-        docName: "mindvault-arch-v2.pdf",
+        docName: "mindvaults-arch-v2.pdf",
         score: 0.94,
         page: 2,
-        text: "MindVault 核心采用 Local RAG (Retrieval-Augmented Generation) 架构。文档在上传后会通过高精度 Parser 提取文本，经过 Chunking 策略（默认 500 tokens，重叠 10%）切分，并调用本地 Embedding 模型（如 bge-small-zh-v1.5）转化为 384 维向量，最后存入 HNSW 索引的高性能本地向量数据库中。"
+        text: "mindvaults 核心采用 Local RAG (Retrieval-Augmented Generation) 架构。文档在上传后会通过高精度 Parser 提取文本，经过 Chunking 策略（默认 500 tokens，重叠 10%）切分，并调用本地 Embedding 模型（如 bge-small-zh-v1.5）转化为 384 维向量，最后存入 HNSW 索引的高性能本地向量数据库中。"
       },
       {
         docName: "rag-pipeline-spec.docx",

@@ -11,7 +11,7 @@ from sqlalchemy.ext.asyncio import AsyncSession, async_sessionmaker, create_asyn
 # Force test database URL before any app imports
 os.environ.setdefault(
     "TEST_DATABASE_URL",
-    "postgresql+asyncpg://mindvault:mindvault@localhost:5432/mindvault_test",
+    "postgresql+asyncpg://mindvaults:mindvaults@localhost:5432/mindvaults_test",
 )
 
 TEST_DATABASE_URL = os.environ["TEST_DATABASE_URL"]

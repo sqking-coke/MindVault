@@ -5,7 +5,7 @@ from pathlib import Path
 
 from fastapi import UploadFile
 from loguru import logger
-from sqlalchemy import select, func
+from sqlalchemy import delete, select, func
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.config import settings
@@ -13,17 +13,29 @@ from app.core.exceptions import (
     DocNotFoundError,
     DocFormatUnsupportedError,
     DocSizeExceededError,
+    DocStatusInvalidError,
 )
-from app.models.document import KbDocument, DOC_STATUS_PROCESSING
+from app.models.document import (
+    KbDocument,
+    DOC_STATUS_PROCESSING,
+    DOC_STATUS_COMPLETED,
+    DOC_STATUS_DISABLED,
+)
 from app.schemas.document import (
     DocumentResponse,
     DocumentListItem,
     DocumentUploadResponse,
     DocumentListResponse,
     DocumentUpdateRequest,
+    DocumentStatusToggleRequest,
+    DocumentStatusToggleResponse,
+    ReindexResponse,
 )
 from app.services.ingestion_service import schedule_ingestion
+from app.services.cache_service import CacheService
 from app.core.database import AsyncSessionLocal
+from app.core.redis import get_redis
+from app.models.chunk import KbChunk
 
 
 def _validate_file(file: UploadFile) -> str:
@@ -179,3 +191,90 @@ async def soft_delete_document(db: AsyncSession, doc_id: int) -> None:
     row.deleted_at = datetime.now(timezone.utc)
     await db.commit()
     logger.info(f"文档软删除: id={doc_id} name={row.doc_name}")
+
+
+_STATUS_LABEL_MAP = {
+    DOC_STATUS_DISABLED: "disabled",
+    DOC_STATUS_COMPLETED: "enabled",
+}
+
+
+async def toggle_document_status(
+    db: AsyncSession, doc_id: int, target_status: str
+) -> DocumentStatusToggleResponse:
+    """切换文档禁用/启用状态。"""
+    if target_status not in ("disabled", "enabled"):
+        raise DocStatusInvalidError(f"无效的状态值: {target_status}")
+
+    row = (
+        await db.execute(
+            select(KbDocument).where(
+                KbDocument.id == doc_id, KbDocument.deleted_at.is_(None)
+            )
+        )
+    ).scalar_one_or_none()
+
+    if row is None:
+        raise DocNotFoundError(f"文档不存在: id={doc_id}")
+
+    if target_status == "disabled":
+        row.status = DOC_STATUS_DISABLED
+    else:
+        row.status = DOC_STATUS_COMPLETED
+
+    await db.commit()
+    await db.refresh(row)
+
+    label = _STATUS_LABEL_MAP.get(row.status, "unknown")
+    logger.info(f"文档状态切换: id={doc_id} status={row.status}({label})")
+
+    return DocumentStatusToggleResponse(
+        id=row.id,
+        doc_name=row.doc_name,
+        status=row.status,
+        status_label=label,
+        updated_at=row.updated_at,
+    )
+
+
+async def reindex_document(db: AsyncSession, doc_id: int) -> ReindexResponse:
+    """文档重索引：删除旧 chunks → 清除缓存 → 重新摄入管道。"""
+    row = (
+        await db.execute(
+            select(KbDocument).where(
+                KbDocument.id == doc_id, KbDocument.deleted_at.is_(None)
+            )
+        )
+    ).scalar_one_or_none()
+
+    if row is None:
+        raise DocNotFoundError(f"文档不存在: id={doc_id}")
+
+    # 删除旧 chunks
+    await db.execute(delete(KbChunk).where(KbChunk.document_id == doc_id))
+
+    # 清除 Redis 检索缓存
+    try:
+        redis = await get_redis()
+        cache = CacheService(redis)
+        await cache.invalidate()
+    except Exception as exc:
+        logger.warning(f"Redis 缓存清除失败，继续重索引: {exc}")
+
+    # 重置文档状态并调度后台摄入
+    row.status = DOC_STATUS_PROCESSING
+    row.chunk_count = 0
+
+    schedule_ingestion(AsyncSessionLocal, row.id, row.doc_type, row.file_path)
+
+    await db.commit()
+    await db.refresh(row)
+
+    logger.info(f"文档重索引已提交: id={doc_id} name={row.doc_name}")
+
+    return ReindexResponse(
+        doc_id=row.id,
+        doc_name=row.doc_name,
+        status=row.status,
+        message="重索引已提交，后台处理中",
+    )

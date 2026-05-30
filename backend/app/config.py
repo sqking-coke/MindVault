@@ -13,10 +13,12 @@ class Settings(BaseSettings):
     RATE_LIMIT_ENABLED: bool = True
 
     # --- 数据库 ---
-    DATABASE_URL: str = "postgresql+asyncpg://mindvault:mindvault@localhost:5432/mindvault"
+    DATABASE_URL: str = "postgresql+asyncpg://mindvaults:mindvaults@localhost:5432/mindvaults"
 
     # --- Redis ---
     REDIS_URL: str = "redis://localhost:6379"
+    REDIS_CACHE_TTL: int = 3600
+    REDIS_CACHE_ENABLED: bool = True
 
     # --- LLM ---
     LLM_BASE_URL: str = "http://localhost:11434/v1"

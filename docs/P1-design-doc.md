@@ -1,4 +1,4 @@
-# MindVault P1 增强设计文档
+# mindvaults P1 增强设计文档
 
 > **版本：v1.0** | 创建：2026-05-29 | 关联 Issue：COKE-38
 > **目标**：多格式支持 + 多轮对话 + 检索沙盒 + 产品化交互
@@ -244,7 +244,7 @@ def _setup_logging():
     log_dir = Path(settings.LOG_DIR)
     log_dir.mkdir(parents=True, exist_ok=True)
     logger.add(
-        log_dir / "mindvault_{time}.log",
+        log_dir / "mindvaults_{time}.log",
         rotation="00:00",       # 每天午夜轮转
         retention=f"{settings.LOG_RETENTION} days",
         encoding="utf-8",
@@ -263,7 +263,7 @@ def _setup_logging():
 1. 每条助手消息旁增加"分享"按钮（仅在消息长度 > 20 字符时显示）
 2. 点击后弹出 Modal，展示知识卡片预览
 3. 三种皮肤切换：高雅极简（米色）、暗黑科技（深色）、企业蓝（蓝色）
-4. 卡片内容：问题 + 答案摘要 + 引用来源 + MindVault 水印 + 日期
+4. 卡片内容：问题 + 答案摘要 + 引用来源 + mindvaults 水印 + 日期
 5. 使用 `html2canvas` 导出为 PNG 下载
 
 ### P1-7：移动端响应式

@@ -22,7 +22,7 @@ services:
     env_file:
       - .env
     environment:
-      - DATABASE_URL=postgresql+asyncpg://mindvault:mindvault@db:5432/mindvault
+      - DATABASE_URL=postgresql+asyncpg://mindvaults:mindvaults@db:5432/mindvaults
       - REDIS_URL=redis://redis:6379
       - LLM_BASE_URL=http://ollama:11434/v1
     volumes:
@@ -40,13 +40,13 @@ services:
   db:
     image: pgvector/pgvector:pg16
     environment:
-      POSTGRES_DB: mindvault
-      POSTGRES_USER: mindvault
-      POSTGRES_PASSWORD: mindvault
+      POSTGRES_DB: mindvaults
+      POSTGRES_USER: mindvaults
+      POSTGRES_PASSWORD: mindvaults
     volumes:
       - pgdata:/var/lib/postgresql/data
     healthcheck:
-      test: ["CMD-SHELL", "pg_isready -U mindvault"]
+      test: ["CMD-SHELL", "pg_isready -U mindvaults"]
       interval: 5s
       timeout: 5s
       retries: 5

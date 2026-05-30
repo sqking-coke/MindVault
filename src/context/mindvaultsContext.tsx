@@ -14,6 +14,8 @@ import {
   fetchDocuments,
   uploadDocuments as apiUploadDocuments,
   deleteDocument as apiDeleteDocument,
+  toggleDocumentStatus as apiToggleDocumentStatus,
+  reindexDocument as apiReindexDocument,
   fetchSessions,
   fetchChatHistory,
   historyRecordToMessage,
@@ -23,7 +25,7 @@ import { streamChat } from "@/services/apiClient";
 
 export type { Citation, Message, Conversation, KnowledgeBase, DocumentRecord };
 
-interface MindVaultContextType {
+interface mindvaultsContextType {
   activeTab: "chat" | "kb";
   setActiveTab: (tab: "chat" | "kb") => void;
   conversations: Conversation[];
@@ -43,11 +45,13 @@ interface MindVaultContextType {
   uploadDocuments: (kbId: string, files: File[]) => void;
   deleteDocument: (docId: string) => void;
   reparseDocument: (docId: string) => void;
+  toggleDocumentStatus: (docId: string, status: "disabled" | "enabled") => Promise<void>;
+  reindexDocument: (docId: string) => Promise<void>;
   selectedCitation: Citation | null;
   setSelectedCitation: (citation: Citation | null) => void;
 }
 
-const MindVaultContext = createContext<MindVaultContextType | undefined>(undefined);
+const mindvaultsContext = createContext<mindvaultsContextType | undefined>(undefined);
 
 function generateUUID(): string {
   return "xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx".replace(/[xy]/g, (c) => {
@@ -57,7 +61,7 @@ function generateUUID(): string {
   });
 }
 
-export const MindVaultProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
+export const mindvaultsProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   const [activeTab, setActiveTab] = useState<"chat" | "kb">("chat");
   const [conversations, setConversations] = useState<Conversation[]>([]);
   const [activeConversationId, setActiveConversationId] = useState<string | null>(null);
@@ -420,8 +424,79 @@ export const MindVaultProvider: React.FC<{ children: React.ReactNode }> = ({ chi
     [],
   );
 
+  const toggleDocumentStatus = useCallback(
+    async (docId: string, status: "disabled" | "enabled") => {
+      const numericId = Number(docId);
+      if (isNaN(numericId)) return;
+
+      // Optimistic update
+      setDocuments((prev) =>
+        prev.map((d) =>
+          d.id === docId
+            ? { ...d, status: status === "disabled" ? "disabled" as const : "parsing" as const }
+            : d,
+        ),
+      );
+
+      try {
+        const updated = await apiToggleDocumentStatus(numericId, status);
+        // Map the response status back
+        setDocuments((prev) =>
+          prev.map((d) =>
+            d.id === docId ? kbDocumentToDocRecord(updated) : d,
+          ),
+        );
+      } catch (err) {
+        // Revert on error
+        const result = await fetchDocuments(1, 50);
+        setDocuments(result.docs);
+        throw err;
+      }
+    },
+    [],
+  );
+
+  const reindexDocumentHandler = useCallback(
+    async (docId: string) => {
+      const numericId = Number(docId);
+      if (isNaN(numericId)) return;
+
+      setDocuments((prev) =>
+        prev.map((d) =>
+          d.id === docId ? { ...d, status: "parsing" as const, progress: 0 } : d,
+        ),
+      );
+
+      try {
+        await apiReindexDocument(numericId);
+        
+        // Polling status or simply load again after delay
+        const checkStatus = async () => {
+          try {
+            const result = await fetchDocuments(1, 50);
+            const currentDoc = result.docs.find(d => d.id === docId);
+            if (currentDoc) {
+              setDocuments(result.docs);
+              if (currentDoc.status === "parsing") {
+                setTimeout(checkStatus, 3000); // Poll every 3 seconds if still parsing
+              }
+            }
+          } catch {
+            // Keep trying or stop on error
+          }
+        };
+        setTimeout(checkStatus, 2000);
+      } catch (err) {
+        const result = await fetchDocuments(1, 50);
+        setDocuments(result.docs);
+        throw err;
+      }
+    },
+    [],
+  );
+
   return (
-    <MindVaultContext.Provider
+    <mindvaultsContext.Provider
       value={{
         activeTab,
         setActiveTab,
@@ -442,17 +517,19 @@ export const MindVaultProvider: React.FC<{ children: React.ReactNode }> = ({ chi
         uploadDocuments: uploadDocumentsHandler,
         deleteDocument: deleteDocumentHandler,
         reparseDocument,
+        toggleDocumentStatus,
+        reindexDocument: reindexDocumentHandler,
         selectedCitation,
         setSelectedCitation,
       }}
     >
       {children}
-    </MindVaultContext.Provider>
+    </mindvaultsContext.Provider>
   );
 };
 
-export const useMindVault = () => {
-  const context = useContext(MindVaultContext);
-  if (!context) throw new Error("useMindVault must be used within a MindVaultProvider");
+export const usemindvaults = () => {
+  const context = useContext(mindvaultsContext);
+  if (!context) throw new Error("usemindvaults must be used within a mindvaultsProvider");
   return context;
 };

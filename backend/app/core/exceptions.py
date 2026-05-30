@@ -42,9 +42,19 @@ class RetrievalTimeoutError(AppException):
         super().__init__(code=4001, message=message, status_code=504)
 
 
+class DocStatusInvalidError(AppException):
+    def __init__(self, message: str = "无效的状态值，仅支持 disabled/enabled"):
+        super().__init__(code=2004, message=message, status_code=400)
+
+
 class LLMCallFailedError(AppException):
     def __init__(self, message: str = "大模型调用失败"):
         super().__init__(code=5001, message=message, status_code=502)
+
+
+class ChunkNotFoundError(AppException):
+    def __init__(self, message: str = "切片不存在"):
+        super().__init__(code=4004, message=message, status_code=404)
 
 
 class EmbeddingUnavailableError(AppException):

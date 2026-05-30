@@ -1,7 +1,7 @@
 "use client";
 
 import React, { useState, useEffect, useRef } from "react";
-import { useMindVault } from "@/context/MindVaultContext";
+import { usemindvaults } from "@/context/mindvaultsContext";
 import { 
   Database, 
   Plus, 
@@ -17,7 +17,7 @@ export default function KBDashboard() {
     addKnowledgeBase, 
     deleteKnowledgeBase,
     documents
-  } = useMindVault();
+  } = usemindvaults();
 
   const [showCreateForm, setShowCreateForm] = useState(false);
   const [newKbName, setNewKbName] = useState("");
